@@ -1,0 +1,10 @@
+[package]
+name = "instacam"
+version = "0.1.0"
+authors = ["Miguel Palhas <mpalhas@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+ffmpeg4-ffi = "0.3.8"
+# ffmpeg-dev = { git = "https://github.com/naps62/ffmpeg-dev-rs", rev = "868dbd6" }
+clap = "3.0.0-beta.1"
