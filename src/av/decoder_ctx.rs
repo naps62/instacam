@@ -1,3 +1,4 @@
+use std::cell::RefCell;
 use std::ptr::null_mut;
 use std::slice;
 
@@ -14,6 +15,7 @@ pub struct DecoderCtx {
     pub stream: *mut sys::AVStream,
     pub packet: *mut sys::AVPacket,
     pub frame: *mut sys::AVFrame,
+    pub rgb_frame: Option<*mut sys::AVFrame>,
 }
 
 impl DecoderCtx {
@@ -66,6 +68,7 @@ impl DecoderCtx {
             codec_ctx: null_mut(),
             packet: sys::av_packet_alloc(),
             frame: sys::av_frame_alloc(),
+            rgb_frame: None,
         }
     }
 
@@ -108,7 +111,7 @@ impl DecoderCtx {
         debug::debug_decoder_ctx(self);
     }
 
-    pub unsafe fn get_streams<'a>(&self) -> &'a [*mut sys::AVStream] {
+    pub unsafe fn get_streams<'b>(&self) -> &'b [*mut sys::AVStream] {
         let ptr = (*self.av).streams;
         let count = (*self.av).nb_streams as usize;
 
@@ -129,6 +132,64 @@ impl DecoderCtx {
                 }
             }
         }
+    }
+
+    unsafe fn empty_rgb_frame(&mut self) {
+        match self.rgb_frame {
+            Some(mut frame) => {
+                sys::av_frame_free(&mut frame);
+                self.rgb_frame = None;
+            }
+
+            None => (),
+        }
+    }
+
+    pub unsafe fn to_rgb(&mut self) {
+        self.empty_rgb_frame();
+
+        let frame = *self.frame;
+        let codec_ctx = *self.codec_ctx;
+
+        // allocate rgb frame
+        let rgb_frame = sys::av_frame_alloc();
+        (*rgb_frame).width = codec_ctx.width;
+        (*rgb_frame).height = codec_ctx.width;
+        (*rgb_frame).format = sys::AVPixelFormat_AV_PIX_FMT_RGB24;
+        sys::av_frame_get_buffer(rgb_frame, 0);
+
+        let sws_ctx = sys::sws_getContext(
+            codec_ctx.width,
+            codec_ctx.height,
+            codec_ctx.pix_fmt,
+            codec_ctx.width,
+            codec_ctx.height,
+            (*rgb_frame).format,
+            sys::SWS_BILINEAR as i32,
+            null_mut(),
+            null_mut(),
+            null_mut(),
+        );
+
+        sys::avpicture_fill(
+            rgb_frame as *mut sys::AVPicture,
+            (*rgb_frame).data[0],
+            (*rgb_frame).format,
+            codec_ctx.width,
+            codec_ctx.height,
+        );
+
+        sys::sws_scale(
+            sws_ctx,
+            frame.data.as_ptr() as *const *const u8,
+            frame.linesize.as_ptr() as *const i32,
+            0,
+            codec_ctx.height,
+            (*rgb_frame).data.as_ptr() as *const *mut u8,
+            (*rgb_frame).linesize.as_ptr() as *const i32,
+        );
+
+        self.rgb_frame = Some(rgb_frame);
     }
 
     unsafe fn decode_packet(&mut self) -> i32 {
