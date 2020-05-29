@@ -14,5 +14,6 @@ fn main() {
         Photos(args) => photos::run(args),
         Formats => formats::run(),
         Codecs => codecs::run(),
+        Show(args) => show::run(args),
     }
 }

@@ -12,9 +12,7 @@ pub struct Opts {
 #[derive(Clap)]
 pub enum SubCommand {
     Photos(Photos),
-    // Remux(Remux),
-    // Transmux(Transmux),
-    // Transcode(Transcode),
+    Show(Show),
     Formats,
     Codecs,
 }
@@ -27,26 +25,8 @@ pub struct Photos {
     pub number: i32,
 }
 
-// #[derive(Clap)]
-// pub struct Remux {
-//     #[clap(short = "i", long = "input")]
-//     pub input: String,
-//     #[clap(short = "o", long = "output")]
-//     pub output: String,
-// }
-
-// #[derive(Clap)]
-// pub struct Transmux {
-//     #[clap(short = "i", long = "input")]
-//     pub input: String,
-//     #[clap(short = "o", long = "output")]
-//     pub output: String,
-// }
-
-// #[derive(Clap)]
-// pub struct Transcode {
-//     #[clap(short = "i", long = "input")]
-//     pub input: String,
-//     #[clap(short = "o", long = "output")]
-//     pub output: String,
-// }
+#[derive(Clap)]
+pub struct Show {
+    #[clap(short = "i", long = "input")]
+    pub input: String,
+}

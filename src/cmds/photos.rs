@@ -1,8 +1,9 @@
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::PathBuf;
-use std::ptr::null_mut;
 use std::slice;
+use std::thread::sleep;
+use std::time::Duration;
 
 use ffmpeg4_ffi::sys;
 
@@ -12,15 +13,13 @@ use crate::opts;
 pub fn run(args: opts::Photos) {
     unsafe {
         sys::avdevice_register_all();
-        sys::avcodec_register_all();
-        sys::av_register_all();
 
         let path = args.input.as_str();
         let format = "v4l2";
 
         assert!(PathBuf::from(path).exists(), "file {} does not exist", path);
 
-        let mut ctx = DecoderCtx::new(path, format, 640, 480, 20);
+        let mut ctx = DecoderCtx::new(path, format, 640, 480, 1);
 
         ctx.open_video_stream();
 
@@ -28,6 +27,7 @@ pub fn run(args: opts::Photos) {
             ctx.read_frame();
             ctx.to_rgb();
             save_frame(&ctx, format!("frames/{}.ppm", i));
+            sleep(Duration::from_secs(1))
         }
     }
 }
@@ -43,7 +43,7 @@ pub unsafe fn save_frame(ctx: &DecoderCtx, name: String) {
     )
     .unwrap();
 
-    let rgb_frame = *ctx.rgb_frame.unwrap();
+    let rgb_frame = *ctx.rgb_frame;
 
     let linesize = rgb_frame.linesize[0];
     let data = slice::from_raw_parts(
