@@ -19,11 +19,10 @@ pub fn run(args: opts::Show) {
         sys::avdevice_register_all();
 
         let path = args.input.as_str();
-        let format = "v4l2";
 
         assert!(PathBuf::from(path).exists(), "file {} does not exist", path);
 
-        let mut ctx = DecoderCtx::new(path, format, 640, 480, 15);
+        let mut ctx = DecoderCtx::new(path);
         ctx.open_video_stream();
 
         let sdl_ctx = sdl2::init().unwrap();
@@ -55,10 +54,6 @@ pub fn run(args: opts::Show) {
             .unwrap();
 
         let (sws_ctx, yuv_frame) = build_yuv_context(&ctx);
-        let data = slice::from_raw_parts(
-            (*yuv_frame).data[0],
-            (*yuv_frame).linesize[0] as usize * height,
-        );
 
         let y_plane = slice::from_raw_parts((*yuv_frame).data[0], width * height);
         let u_plane = slice::from_raw_parts((*yuv_frame).data[1], width * height / 4);
@@ -69,15 +64,11 @@ pub fn run(args: opts::Show) {
             i = (i + 1) % 255;
             ctx.read_frame();
             to_yuv(&ctx, sws_ctx, yuv_frame);
-            // to_rgb(&ctx, sws_ctx, yuv_frame);
-            // texture
-            //     .update(None, data, (*yuv_frame).linesize[0] as usize)
-            //     .unwrap();
+
             texture
                 .update_yuv(None, y_plane, width, u_plane, uv_pitch, v_plane, uv_pitch)
                 .unwrap();
 
-            // canvas.set_draw_color(pixels::Color::RGB(i, 64, 255 - i));
             canvas.clear();
             canvas.copy(&texture, None, None).unwrap();
 

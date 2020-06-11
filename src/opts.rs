@@ -13,6 +13,7 @@ pub struct Opts {
 pub enum SubCommand {
     Photos(Photos),
     Show(Show),
+    Record(Record),
     Formats,
     Codecs,
 }
@@ -29,4 +30,14 @@ pub struct Photos {
 pub struct Show {
     #[clap(short = "i", long = "input")]
     pub input: String,
+}
+
+#[derive(Clap)]
+pub struct Record {
+    #[clap(short = "i", long = "input")]
+    pub input: String,
+    #[clap(short = "o", long = "output")]
+    pub output: String,
+    #[clap(short = "d", long = "duration")]
+    pub duration: i32,
 }

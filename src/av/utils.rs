@@ -27,3 +27,10 @@ pub fn check_error(response: i32) -> bool {
 
     response < 0
 }
+
+pub fn av_inv_q(n: sys::AVRational) -> sys::AVRational {
+    sys::AVRational {
+        num: n.den,
+        den: n.num,
+    }
+}

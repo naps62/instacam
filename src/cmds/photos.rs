@@ -16,11 +16,10 @@ pub fn run(args: opts::Photos) {
         sys::avdevice_register_all();
 
         let path = args.input.as_str();
-        let format = "v4l2";
 
         assert!(PathBuf::from(path).exists(), "file {} does not exist", path);
 
-        let mut ctx = DecoderCtx::new(path, format, 640, 480, 1);
+        let mut ctx = DecoderCtx::new(path);
 
         ctx.open_video_stream();
 

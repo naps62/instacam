@@ -12,8 +12,9 @@ fn main() {
 
     match opts.subcmd {
         Photos(args) => photos::run(args),
+        Show(args) => show::run(args),
+        Record(args) => record::run(args),
         Formats => formats::run(),
         Codecs => codecs::run(),
-        Show(args) => show::run(args),
     }
 }
