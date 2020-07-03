@@ -9,3 +9,4 @@ ffmpeg4-ffi = "0.3.8"
 # ffmpeg-dev = { git = "https://github.com/naps62/ffmpeg-dev-rs", rev = "868dbd6" }
 clap = "3.0.0-beta.1"
 sdl2 = "0.34"
+iui = "0.3"

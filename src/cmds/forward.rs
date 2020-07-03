@@ -8,7 +8,7 @@ use crate::av::decoder_ctx::DecoderCtx;
 use crate::av::encoder_ctx::EncoderCtx;
 use crate::opts;
 
-pub fn run(args: opts::Record) {
+pub fn run(args: opts::Forward) {
     unsafe {
         sys::avdevice_register_all();
 
@@ -24,15 +24,12 @@ pub fn run(args: opts::Record) {
         let mut ctx = DecoderCtx::new(input_path);
         ctx.open_video_stream();
 
-        let mut out_ctx = EncoderCtx::new(output_path);
-        out_ctx.load_stream(&ctx, sys::AVCodecID_AV_CODEC_ID_H264);
+        let mut out_ctx = EncoderCtx::new_with_format(output_path, "v4l2");
+        out_ctx.load_stream(&ctx, sys::AVCodecID_AV_CODEC_ID_RAWVIDEO);
         out_ctx.build_frame_context(&ctx);
         out_ctx.open_file(output_path);
 
-        let mut n = args.duration;
-
-        while n > 0 {
-            n = n - 1;
+        loop {
             ctx.read_frame();
             out_ctx.convert_frame(&ctx);
             out_ctx.encode(&ctx);

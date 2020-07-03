@@ -22,7 +22,6 @@ impl EncoderCtx {
         let mut av: *mut sys::AVFormatContext = null_mut();
 
         let format = sys::av_guess_format(null_mut(), path_str.as_ptr(), null_mut());
-        println!("format: {:?}", format);
 
         sys::avformat_alloc_output_context2(&mut av, format, null_mut(), path_str.as_ptr());
 
@@ -36,8 +35,29 @@ impl EncoderCtx {
         }
     }
 
-    pub unsafe fn load_stream(&mut self, decoder_ctx: &DecoderCtx) {
-        self.codec = sys::avcodec_find_encoder(sys::AVCodecID_AV_CODEC_ID_H264);
+    pub unsafe fn new_with_format(path: &str, format: &str) -> EncoderCtx {
+        let path_str = utils::str_to_c_str(path);
+        let format_str = utils::str_to_c_str(format);
+
+        let mut av: *mut sys::AVFormatContext = null_mut();
+
+        let format = sys::av_guess_format(format_str.as_ptr(), null_mut(), null_mut());
+        println!("{:?}", format);
+
+        sys::avformat_alloc_output_context2(&mut av, format, null_mut(), path_str.as_ptr());
+
+        EncoderCtx {
+            av: av,
+            codec: null_mut(),
+            codec_ctx: null_mut(),
+            stream: null_mut(),
+            frame: null_mut(),
+            sws_ctx: null_mut(),
+        }
+    }
+
+    pub unsafe fn load_stream(&mut self, decoder_ctx: &DecoderCtx, codec_id: u32) {
+        self.codec = sys::avcodec_find_encoder(codec_id);
         self.codec_ctx = sys::avcodec_alloc_context3(self.codec);
         self.stream = sys::avformat_new_stream(self.av, null_mut());
 

@@ -14,6 +14,8 @@ pub enum SubCommand {
     Photos(Photos),
     Show(Show),
     Record(Record),
+    Forward(Forward),
+    UI,
     Formats,
     Codecs,
 }
@@ -40,4 +42,12 @@ pub struct Record {
     pub output: String,
     #[clap(short = "d", long = "duration")]
     pub duration: i32,
+}
+
+#[derive(Clap)]
+pub struct Forward {
+    #[clap(short = "i", long = "input")]
+    pub input: String,
+    #[clap(short = "o", long = "output")]
+    pub output: String,
 }
