@@ -34,7 +34,5 @@ pub fn run(args: opts::Forward) {
             out_ctx.convert_frame(&ctx);
             out_ctx.encode(&ctx);
         }
-
-        out_ctx.close_file();
     }
 }

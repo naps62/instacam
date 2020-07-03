@@ -16,10 +16,6 @@ pub fn str_to_c_str(str: &str) -> CString {
     CString::new(str).expect("could not alloc CString")
 }
 
-pub fn string_to_c_str(str: String) -> CString {
-    CString::new(&str[..]).expect("could not alloc CString")
-}
-
 pub fn check_error(response: i32) -> bool {
     if response < 0 {
         println!("error: {}", unsafe { averror_to_str(response) });

@@ -76,9 +76,7 @@ impl EncoderCtx {
         // time base
         let input_framerate =
             sys::av_guess_frame_rate(decoder_ctx.av, decoder_ctx.stream, null_mut());
-        let mut time_base = utils::av_inv_q(input_framerate);
-        // time_base.num = 1;
-        // time_base.den = 1;
+        let time_base = utils::av_inv_q(input_framerate);
         (*self.codec_ctx).time_base = time_base;
         (*self.stream).time_base = time_base;
 

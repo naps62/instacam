@@ -1,48 +1,76 @@
 extern crate iui;
 
-use iui::controls::{Button, Group, Label, VerticalBox};
+use iui::controls::{
+    Button, Entry, Group, HorizontalBox, HorizontalSeparator, Label, Slider, Spacer, Spinbox,
+    VerticalBox,
+};
 use iui::prelude::*;
+use std::cell::RefCell;
+use std::rc::Rc;
+
+struct State {
+    input: String,
+}
 
 pub fn run() {
     let ui = UI::init().expect("Couldn't initialize UI library");
 
-    let mut win = Window::new(&ui, "Instacam", 800, 600, WindowType::NoMenubar);
+    let state = Rc::new(RefCell::new(State { input: "".into() }));
 
-    let mut vbox = VerticalBox::new(&ui);
-    vbox.set_padded(&ui, true);
+    let (input_group, mut input) = {
+        let mut input_group = Group::new(&ui, "Inputs");
+        let mut input_vbox = VerticalBox::new(&ui);
+        input_vbox.set_padded(&ui, true);
 
-    let mut group_vbox = VerticalBox::new(&ui);
-    let mut group = Group::new(&ui, "Group");
+        let input = Entry::new(&ui);
+        let button = Button::new(&ui, "Load");
 
-    let mut button = Button::new(&ui, "Button");
-    button.on_clicked(&ui, {
-        let ui = ui.clone();
-        move |btn| {
-            btn.set_text(&ui, "Clicked!");
+        input_vbox.append(&ui, input.clone(), LayoutStrategy::Compact);
+
+        input_group.set_child(&ui, input_vbox);
+
+        (input_group, input)
+    };
+
+    let (output_group, text_label) = {
+        let mut output_group = Group::new(&ui, "Outputs");
+        let mut output_vbox = VerticalBox::new(&ui);
+
+        let text_label = Label::new(&ui, "");
+
+        output_vbox.append(&ui, text_label.clone(), LayoutStrategy::Compact);
+
+        output_group.set_child(&ui, output_vbox);
+        (output_group, text_label)
+    };
+
+    let mut hbox = HorizontalBox::new(&ui);
+    hbox.append(&ui, input_group, LayoutStrategy::Stretchy);
+    hbox.append(&ui, output_group, LayoutStrategy::Stretchy);
+
+    let mut window = Window::new(&ui, "Input Output Test", 300, 150, WindowType::NoMenubar);
+
+    window.set_child(&ui, hbox);
+    window.show(&ui);
+
+    input.on_changed(&ui, {
+        let state = state.clone();
+        move |val| {
+            state.borrow_mut().input = val;
         }
     });
 
-    let mut quit_button = Button::new(&ui, "Quit");
-    quit_button.on_clicked(&ui, {
+    let mut event_loop = ui.event_loop();
+    event_loop.on_tick(&ui, {
         let ui = ui.clone();
-        move |_| {
-            ui.quit();
+        let mut text_label = text_label.clone();
+
+        move || {
+            let state = state.borrow();
+
+            text_label.set_text(&ui, &format!("Text: {}", state.input));
         }
     });
 
-    let mut label_text = String::new();
-    label_text.push_str("there is a ton of text in this label.\n");
-    label_text.push_str("Pretty much every uncide character is supported.\n");
-    label_text.push_str("🎉 用户界面 사용자 인터페이스");
-    let label = Label::new(&ui, &label_text);
-
-    vbox.append(&ui, label, LayoutStrategy::Stretchy);
-    group_vbox.append(&ui, button, LayoutStrategy::Compact);
-    group_vbox.append(&ui, quit_button, LayoutStrategy::Compact);
-    group.set_child(&ui, group_vbox);
-    vbox.append(&ui, group, LayoutStrategy::Compact);
-
-    win.set_child(&ui, vbox);
-    win.show(&ui);
-    ui.main();
+    event_loop.run(&ui);
 }
