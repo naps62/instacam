@@ -5,6 +5,7 @@ use ffmpeg4_ffi::sys;
 
 use super::decoder_ctx::DecoderCtx;
 use super::utils;
+use crate::filter;
 
 #[derive(Clone)]
 pub struct EncoderCtx {
@@ -13,6 +14,7 @@ pub struct EncoderCtx {
     pub codec: *mut sys::AVCodec,
     pub stream: *mut sys::AVStream,
     pub frame: *mut sys::AVFrame,
+    pub filtered_frame: *mut sys::AVFrame,
     pub sws_ctx: *mut sys::SwsContext,
     pub sws_ctx2: *mut sys::SwsContext,
     pub frame2: *mut sys::AVFrame,
@@ -37,6 +39,7 @@ impl EncoderCtx {
             codec_ctx: null_mut(),
             stream: null_mut(),
             frame: null_mut(),
+            filtered_frame: null_mut(),
             sws_ctx: null_mut(),
             sws_ctx2: null_mut(),
             frame2: null_mut(),
@@ -59,6 +62,7 @@ impl EncoderCtx {
             codec_ctx: null_mut(),
             stream: null_mut(),
             frame: null_mut(),
+            filtered_frame: null_mut(),
             sws_ctx: null_mut(),
             sws_ctx2: null_mut(),
             frame2: null_mut(),
@@ -95,10 +99,14 @@ impl EncoderCtx {
 
     pub unsafe fn build_frame_context(&mut self, ctx: &DecoderCtx) {
         self.frame = sys::av_frame_alloc();
+        self.filtered_frame = sys::av_frame_alloc();
         self.frame2 = sys::av_frame_alloc();
         (*self.frame).width = (*self.codec_ctx).width;
         (*self.frame).height = (*self.codec_ctx).height;
-        (*self.frame).format = sys::AVPixelFormat_AV_PIX_FMT_RGB24;
+        (*self.frame).format = sys::AVPixelFormat_AV_PIX_FMT_BGR24;
+        (*self.filtered_frame).width = (*self.codec_ctx).width;
+        (*self.filtered_frame).height = (*self.codec_ctx).height;
+        (*self.filtered_frame).format = sys::AVPixelFormat_AV_PIX_FMT_BGR24;
         (*self.frame2).width = (*self.codec_ctx).width;
         (*self.frame2).height = (*self.codec_ctx).height;
         (*self.frame2).format = (*self.codec_ctx).pix_fmt;
@@ -138,6 +146,7 @@ impl EncoderCtx {
         (*self.frame2).pts = 0;
 
         sys::av_frame_get_buffer(self.frame, 0);
+        sys::av_frame_get_buffer(self.filtered_frame, 0);
         sys::av_frame_get_buffer(self.frame2, 0);
 
         let size = sys::avpicture_get_size(
@@ -146,6 +155,7 @@ impl EncoderCtx {
             (*self.frame).height,
         );
         let buffer = sys::av_malloc(size as usize);
+        let gray_buffer = sys::av_malloc(size as usize);
 
         let size2 = sys::avpicture_get_size(
             (*self.frame2).format,
@@ -158,6 +168,14 @@ impl EncoderCtx {
             self.frame as *mut sys::AVPicture,
             buffer as *mut u8,
             (*self.frame).format,
+            (*self.codec_ctx).width,
+            (*self.codec_ctx).height,
+        );
+
+        sys::avpicture_fill(
+            self.filtered_frame as *mut sys::AVPicture,
+            gray_buffer as *mut u8,
+            (*self.filtered_frame).format,
             (*self.codec_ctx).width,
             (*self.codec_ctx).height,
         );
@@ -198,10 +216,12 @@ impl EncoderCtx {
             (*self.frame).linesize.as_ptr() as *const i32,
         );
 
+        filter::pixelate(self.frame, self.filtered_frame);
+
         sys::sws_scale(
             self.sws_ctx2,
-            (*self.frame).data.as_ptr() as *const *const u8,
-            (*self.frame).linesize.as_ptr() as *const i32,
+            (*self.filtered_frame).data.as_ptr() as *const *const u8,
+            (*self.filtered_frame).linesize.as_ptr() as *const i32,
             0,
             (*decoder_ctx.codec_ctx).height,
             (*self.frame2).data.as_ptr() as *const *mut u8,

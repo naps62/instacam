@@ -43,7 +43,7 @@ fn render_loop(window: Window, event_pump: &mut EventPump, receiver: Receiver<Th
 
     let mut texture = creator
         .create_texture(
-            pixels::PixelFormatEnum::RGB24,
+            pixels::PixelFormatEnum::BGR24,
             TextureAccess::Streaming,
             width as u32,
             height as u32,
@@ -52,18 +52,12 @@ fn render_loop(window: Window, event_pump: &mut EventPump, receiver: Receiver<Th
 
     'running: loop {
         let encoder_ctx = receiver.recv().expect("Failed to receive frame");
-        let frame = encoder_ctx.lock().unwrap().frame;
+        let frame = encoder_ctx.lock().unwrap().filtered_frame;
 
         let data = unsafe { slice::from_raw_parts((*frame).data[0], width * height) };
-        // let y_plane = unsafe { slice::from_raw_parts((*frame).data[0], width * height) };
-        // let u_plane = unsafe { slice::from_raw_parts((*frame).data[1], width * height / 4) };
-        // let v_plane = unsafe { slice::from_raw_parts((*frame).data[2], width * height / 4) };
-        // let uv_pitch = width / 2;
         let linesize = unsafe { (*frame).linesize[0] };
 
         texture.update(None, data, linesize as usize).unwrap();
-        // .update_yuv(None, y_plane, width, u_plane, uv_pitch, v_plane, uv_pitch)
-        // .unwrap();
 
         canvas.clear();
         canvas.copy(&texture, None, None).unwrap();

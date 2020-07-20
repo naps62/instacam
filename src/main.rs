@@ -1,6 +1,7 @@
 mod av;
 mod canvas;
 mod cmds;
+mod filter;
 mod opts;
 
 use clap::Clap;
