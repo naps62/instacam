@@ -1,9 +1,6 @@
 extern crate iui;
 
-use iui::controls::{
-    Button, Entry, Group, HorizontalBox, HorizontalSeparator, Label, Slider, Spacer, Spinbox,
-    VerticalBox,
-};
+use iui::controls::{Button, Entry, Group, HorizontalBox, Label, VerticalBox};
 use iui::prelude::*;
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -17,7 +14,7 @@ pub fn run() {
 
     let state = Rc::new(RefCell::new(State { input: "".into() }));
 
-    let (input_group, mut input) = {
+    let (input_group, mut input, mut _button) = {
         let mut input_group = Group::new(&ui, "Inputs");
         let mut input_vbox = VerticalBox::new(&ui);
         input_vbox.set_padded(&ui, true);
@@ -29,7 +26,7 @@ pub fn run() {
 
         input_group.set_child(&ui, input_vbox);
 
-        (input_group, input)
+        (input_group, input, button)
     };
 
     let (output_group, text_label) = {

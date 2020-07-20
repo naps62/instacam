@@ -42,7 +42,7 @@ pub fn run(args: opts::Forward) {
 
         loop {
             if args.preview {
-                sender.send(msg.clone());
+                sender.send(msg.clone()).unwrap();
             }
 
             ctx.read_frame();

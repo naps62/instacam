@@ -10,8 +10,6 @@ use sdl2::render::TextureAccess;
 use sdl2::video::Window;
 use sdl2::EventPump;
 
-use ffmpeg4_ffi::sys;
-
 use std::sync::{Arc, Mutex};
 
 use crate::av::encoder_ctx::EncoderCtx;

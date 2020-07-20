@@ -1,5 +1,4 @@
 use std::ptr::null_mut;
-use std::slice;
 
 use ffmpeg4_ffi::extra::defs::{averror, averror_eof, eagain};
 use ffmpeg4_ffi::sys;
@@ -22,6 +21,7 @@ pub struct EncoderCtx {
 unsafe impl Send for EncoderCtx {}
 
 impl EncoderCtx {
+    #[allow(dead_code)]
     pub unsafe fn new(path: &str) -> EncoderCtx {
         let path_str = utils::str_to_c_str(path);
 
@@ -185,10 +185,6 @@ impl EncoderCtx {
         let response = sys::avformat_write_header(self.av, null_mut());
 
         utils::check_error(response);
-    }
-
-    pub unsafe fn close_file(&mut self) {
-        sys::av_write_trailer(self.av);
     }
 
     pub unsafe fn convert_frame(&mut self, decoder_ctx: &DecoderCtx) {
