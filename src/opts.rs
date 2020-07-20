@@ -50,4 +50,6 @@ pub struct Forward {
     pub input: String,
     #[clap(short = "o", long = "output")]
     pub output: String,
+    #[clap(short = "p", long = "preview")]
+    pub preview: bool,
 }

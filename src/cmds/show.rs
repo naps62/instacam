@@ -26,9 +26,9 @@ pub fn run(args: opts::Show) {
         ctx.open_video_stream();
 
         let sdl_ctx = sdl2::init().unwrap();
-        let video_sybsystem = sdl_ctx.video().unwrap();
-        let window = video_sybsystem
-            .window("instacam", 1280, 1024)
+        let video_subsystem = sdl_ctx.video().unwrap();
+        let window = video_subsystem
+            .window("instacam", 800, 600)
             .position_centered()
             .build()
             .unwrap();

@@ -1,4 +1,5 @@
 mod av;
+mod canvas;
 mod cmds;
 mod opts;
 
