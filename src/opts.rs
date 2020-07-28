@@ -23,4 +23,10 @@ pub struct Forward {
     pub output: String,
     #[clap(short = "p", long = "preview")]
     pub preview: bool,
+    #[clap(short = "w", long = "width", default_value = "640")]
+    pub width: i32,
+    #[clap(short = "h", long = "height", default_value = "480")]
+    pub height: i32,
+    #[clap(short = "b", long = "blur", default_value = "20")]
+    pub blur: i32,
 }

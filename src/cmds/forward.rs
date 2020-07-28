@@ -16,55 +16,53 @@ use std::sync::{Arc, Mutex};
 const BGR: sys::AVPixelFormat = sys::AVPixelFormat_AV_PIX_FMT_BGR24;
 const YUV: sys::AVPixelFormat = sys::AVPixelFormat_AV_PIX_FMT_YUV420P;
 
-const WIDTH: i32 = 640;
-const HEIGHT: i32 = 480;
-
 pub fn run(args: opts::Forward) {
-    unsafe {
-        sys::avdevice_register_all();
+    let width = args.width;
+    let height = args.height;
 
-        let input_path = args.input.as_str();
-        let output_path = args.output.as_str();
+    unsafe { sys::avdevice_register_all() };
 
-        assert!(
-            PathBuf::from(input_path).exists(),
-            "file {} does not exist",
-            input_path
-        );
+    let input_path = args.input.as_str();
+    let output_path = args.output.as_str();
 
-        let mut decoder = DecoderCtx::open(input_path);
+    assert!(
+        PathBuf::from(input_path).exists(),
+        "file {} does not exist",
+        input_path
+    );
 
-        let mut encoder = EncoderCtx::new(output_path, "v4l2");
-        encoder.load_stream(&decoder, sys::AVCodecID_AV_CODEC_ID_RAWVIDEO);
-        encoder.open_file(output_path);
+    let mut decoder = DecoderCtx::open(input_path, 30, width, height);
 
-        let (sender, receiver) = crossbeam_channel::unbounded();
+    let mut encoder = EncoderCtx::new(output_path, "v4l2");
+    encoder.load_stream(&decoder, sys::AVCodecID_AV_CODEC_ID_RAWVIDEO);
+    encoder.open_file(output_path);
 
+    let (sender, receiver) = crossbeam_channel::unbounded();
+
+    if args.preview {
+        canvas::create(width, height, receiver);
+    }
+
+    let frame_raw = unsafe { sys::av_frame_alloc() };
+    let frame_bgr = alloc_frame(width, height, BGR);
+    let frame_fil = alloc_frame(width, height, BGR);
+    let frame_yuv = alloc_frame(width, height, YUV);
+
+    let yuv2bgr = sws_alloc(width, height, unsafe { (*decoder.codec_ctx).pix_fmt }, BGR);
+    let bgr2yuv = sws_alloc(width, height, BGR, YUV);
+
+    let msg = Arc::new(Mutex::new(canvas::FrameMsg(frame_fil)));
+
+    loop {
         if args.preview {
-            canvas::create(WIDTH, HEIGHT, receiver);
+            sender.send(msg.clone()).unwrap();
         }
 
-        let frame_raw = sys::av_frame_alloc();
-        let frame_bgr = alloc_frame(WIDTH, HEIGHT, BGR);
-        let frame_fil = alloc_frame(WIDTH, HEIGHT, BGR);
-        let frame_yuv = alloc_frame(WIDTH, HEIGHT, YUV);
-
-        let yuv2bgr = sws_alloc(WIDTH, HEIGHT, (*decoder.codec_ctx).pix_fmt, BGR);
-        let bgr2yuv = sws_alloc(WIDTH, HEIGHT, BGR, YUV);
-
-        let msg = Arc::new(Mutex::new(canvas::FrameMsg(frame_fil)));
-
-        loop {
-            if args.preview {
-                sender.send(msg.clone()).unwrap();
-            }
-
-            decoder.read_frame(&frame_raw);
-            sws_convert(yuv2bgr, frame_raw, frame_bgr);
-            filter::pixelate(frame_bgr, frame_fil);
-            sws_convert(bgr2yuv, frame_fil, frame_yuv);
-            encoder.encode(&decoder, &frame_yuv);
-        }
+        decoder.read_frame(&frame_raw);
+        sws_convert(yuv2bgr, frame_raw, frame_bgr);
+        filter::blur(frame_bgr, frame_fil, args.blur);
+        sws_convert(bgr2yuv, frame_fil, frame_yuv);
+        encoder.encode(&decoder, &frame_yuv);
     }
 }
 

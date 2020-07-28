@@ -4,7 +4,7 @@ use ffmpeg4_ffi::sys;
 use opencv::core::{BorderTypes, Mat, Point, Size, CV_8UC3};
 use opencv::imgproc;
 
-pub fn pixelate(src_frame: *mut sys::AVFrame, dst_frame: *mut sys::AVFrame) {
+pub fn blur(src_frame: *mut sys::AVFrame, dst_frame: *mut sys::AVFrame, ksize: i32) {
     let src = unsafe {
         Mat::new_rows_cols_with_data(
             (*src_frame).height,
@@ -30,7 +30,7 @@ pub fn pixelate(src_frame: *mut sys::AVFrame, dst_frame: *mut sys::AVFrame) {
     imgproc::blur(
         &src,
         &mut dst,
-        Size::new(20, 20),
+        Size::new(ksize, ksize),
         Point::new(-1, -1),
         BorderTypes::BORDER_CONSTANT as i32,
     )
