@@ -2,14 +2,22 @@ extern crate crossbeam_channel;
 extern crate sdl2;
 
 use std::path::PathBuf;
+use std::ptr::null_mut;
 
 use ffmpeg4_ffi::sys;
 
 use crate::av::decoder_ctx::DecoderCtx;
 use crate::av::encoder_ctx::EncoderCtx;
 use crate::canvas;
+use crate::filter;
 use crate::opts;
 use std::sync::{Arc, Mutex};
+
+const BGR: sys::AVPixelFormat = sys::AVPixelFormat_AV_PIX_FMT_BGR24;
+const YUV: sys::AVPixelFormat = sys::AVPixelFormat_AV_PIX_FMT_YUV420P;
+
+const WIDTH: i32 = 640;
+const HEIGHT: i32 = 480;
 
 pub fn run(args: opts::Forward) {
     unsafe {
@@ -24,30 +32,103 @@ pub fn run(args: opts::Forward) {
             input_path
         );
 
-        let mut ctx = DecoderCtx::new(input_path);
-        ctx.open_video_stream();
+        let mut decoder = DecoderCtx::open(input_path);
 
-        let mut out_ctx = EncoderCtx::new_with_format(output_path, "v4l2");
-        out_ctx.load_stream(&ctx, sys::AVCodecID_AV_CODEC_ID_RAWVIDEO);
-        out_ctx.build_frame_context(&ctx);
-        out_ctx.open_file(output_path);
+        let mut encoder = EncoderCtx::new(output_path, "v4l2");
+        encoder.load_stream(&decoder, sys::AVCodecID_AV_CODEC_ID_RAWVIDEO);
+        encoder.open_file(output_path);
 
         let (sender, receiver) = crossbeam_channel::unbounded();
 
         if args.preview {
-            canvas::create(receiver);
+            canvas::create(WIDTH, HEIGHT, receiver);
         }
 
-        let msg = Arc::new(Mutex::new(out_ctx.clone()));
+        let frame_raw = sys::av_frame_alloc();
+        let frame_bgr = alloc_frame(WIDTH, HEIGHT, BGR);
+        let frame_fil = alloc_frame(WIDTH, HEIGHT, BGR);
+        let frame_yuv = alloc_frame(WIDTH, HEIGHT, YUV);
+
+        let yuv2bgr = sws_alloc(WIDTH, HEIGHT, (*decoder.codec_ctx).pix_fmt, BGR);
+        let bgr2yuv = sws_alloc(WIDTH, HEIGHT, BGR, YUV);
+
+        let msg = Arc::new(Mutex::new(canvas::FrameMsg(frame_fil)));
 
         loop {
             if args.preview {
                 sender.send(msg.clone()).unwrap();
             }
 
-            ctx.read_frame();
-            out_ctx.convert_frame(&ctx);
-            out_ctx.encode(&ctx);
+            decoder.read_frame(&frame_raw);
+            sws_convert(yuv2bgr, frame_raw, frame_bgr);
+            filter::pixelate(frame_bgr, frame_fil);
+            sws_convert(bgr2yuv, frame_fil, frame_yuv);
+            encoder.encode(&decoder, &frame_yuv);
         }
     }
+}
+
+pub fn alloc_frame(width: i32, height: i32, format: sys::AVPixelFormat) -> *mut sys::AVFrame {
+    unsafe {
+        let frame = sys::av_frame_alloc();
+
+        (*frame).width = width;
+        (*frame).height = height;
+        (*frame).format = format;
+
+        sys::av_frame_get_buffer(frame, 0);
+
+        let size = sys::avpicture_get_size(format, width, height);
+        let buffer = sys::av_malloc(size as usize);
+
+        sys::avpicture_fill(
+            frame as *mut sys::AVPicture,
+            buffer as *mut u8,
+            format,
+            width,
+            height,
+        );
+
+        (*frame).pts = 0;
+
+        frame
+    }
+}
+
+pub fn sws_alloc(
+    width: i32,
+    height: i32,
+    from: sys::AVPixelFormat,
+    to: sys::AVPixelFormat,
+) -> *mut sys::SwsContext {
+    unsafe {
+        sys::sws_getContext(
+            width,
+            height,
+            from,
+            width,
+            height,
+            to,
+            sys::SWS_BILINEAR as i32,
+            null_mut(),
+            null_mut(),
+            null_mut(),
+        )
+    }
+}
+
+pub fn sws_convert(ctx: *mut sys::SwsContext, from: *mut sys::AVFrame, to: *mut sys::AVFrame) {
+    unsafe {
+        sys::sws_scale(
+            ctx,
+            (*from).data.as_ptr() as *const *const u8,
+            (*from).linesize.as_ptr() as *const i32,
+            0,
+            (*from).height,
+            (*to).data.as_ptr() as *const *mut u8,
+            (*to).linesize.as_ptr() as *const i32,
+        );
+
+        (*to).pts = (*from).pts;
+    };
 }

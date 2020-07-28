@@ -12,16 +12,21 @@ use sdl2::EventPump;
 
 use std::sync::{Arc, Mutex};
 
-use crate::av::encoder_ctx::EncoderCtx;
+pub struct FrameMsg(pub *mut ffmpeg4_ffi::sys::AVFrame);
+unsafe impl Send for FrameMsg {}
 
-type ThreadSafeFrame = Arc<Mutex<EncoderCtx>>;
+pub type ThreadSafeFrame = Arc<Mutex<FrameMsg>>;
 
-pub fn create(receiver: Receiver<ThreadSafeFrame>) -> thread::JoinHandle<()> {
+pub fn create(
+    width: i32,
+    height: i32,
+    receiver: Receiver<ThreadSafeFrame>,
+) -> thread::JoinHandle<()> {
     thread::spawn(move || {
         let ctx = sdl2::init().unwrap();
         let video_subsystem = ctx.video().unwrap();
         let window = video_subsystem
-            .window("instacam", 1280, 720)
+            .window("instacam", width as u32, height as u32)
             .position_centered()
             .build()
             .unwrap();
@@ -33,28 +38,26 @@ pub fn create(receiver: Receiver<ThreadSafeFrame>) -> thread::JoinHandle<()> {
 }
 
 fn render_loop(window: Window, event_pump: &mut EventPump, receiver: Receiver<ThreadSafeFrame>) {
+    let (width, height) = window.size();
     let mut canvas = window.into_canvas().build().unwrap();
     let creator = canvas.texture_creator();
 
     canvas.set_draw_color(pixels::Color::RGB(0, 255, 255));
 
-    let width: usize = 1280;
-    let height: usize = 720;
-
     let mut texture = creator
         .create_texture(
             pixels::PixelFormatEnum::BGR24,
             TextureAccess::Streaming,
-            width as u32,
-            height as u32,
+            width,
+            height,
         )
         .unwrap();
 
     'running: loop {
-        let encoder_ctx = receiver.recv().expect("Failed to receive frame");
-        let frame = encoder_ctx.lock().unwrap().filtered_frame;
+        let frame_msg = receiver.recv().expect("Failed to receive frame");
+        let frame = frame_msg.lock().unwrap().0;
 
-        let data = unsafe { slice::from_raw_parts((*frame).data[0], width * height) };
+        let data = unsafe { slice::from_raw_parts((*frame).data[0], (width * height) as usize) };
         let linesize = unsafe { (*frame).linesize[0] };
 
         texture.update(None, data, linesize as usize).unwrap();

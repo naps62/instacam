@@ -13,37 +13,46 @@ pub struct DecoderCtx {
     pub codec_ctx: *mut sys::AVCodecContext,
     pub stream: *mut sys::AVStream,
     pub packet: *mut sys::AVPacket,
-    pub frame: *mut sys::AVFrame,
 }
 
 impl DecoderCtx {
-    pub unsafe fn new(path: &str) -> DecoderCtx {
+    pub unsafe fn open(path: &str) -> DecoderCtx {
         let mut av = sys::avformat_alloc_context();
 
+        let mut options: *mut sys::AVDictionary = null_mut();
+        sys::av_dict_set(
+            &mut options,
+            utils::str_to_c_str("video_size").as_ptr(),
+            utils::str_to_c_str("320x224").as_ptr(),
+            0,
+        );
         // open input
         let response = sys::avformat_open_input(
             &mut av,
             utils::str_to_c_str(path).as_ptr(),
             null_mut(),
-            null_mut(),
+            &mut options,
         );
 
         if utils::check_error(response) {
             panic!("could not open {}", path);
         }
 
-        DecoderCtx {
+        let mut decoder = DecoderCtx {
             av,
             video_stream_index: 0,
             stream: null_mut(),
             codec: null_mut(),
             codec_ctx: null_mut(),
             packet: sys::av_packet_alloc(),
-            frame: sys::av_frame_alloc(),
-        }
+        };
+
+        decoder.open_video_stream();
+
+        decoder
     }
 
-    pub unsafe fn open_video_stream(&mut self) {
+    unsafe fn open_video_stream(&mut self) {
         // load stream info
         sys::avformat_find_stream_info(self.av, null_mut());
 
@@ -89,10 +98,10 @@ impl DecoderCtx {
         self.get_streams()[i]
     }
 
-    pub unsafe fn read_frame(&mut self) {
+    pub unsafe fn read_frame(&mut self, frame: &*mut sys::AVFrame) {
         while sys::av_read_frame(self.av, self.packet) >= 0 {
             if (*self.packet).stream_index as usize == self.video_stream_index {
-                let response = self.decode_packet();
+                let response = self.decode_packet(frame);
 
                 if response < 0 {
                     break;
@@ -101,7 +110,7 @@ impl DecoderCtx {
         }
     }
 
-    unsafe fn decode_packet(&mut self) -> i32 {
+    unsafe fn decode_packet(&mut self, frame: &*mut sys::AVFrame) -> i32 {
         let mut response;
 
         // decode packet
@@ -112,7 +121,7 @@ impl DecoderCtx {
         }
 
         while response >= 0 {
-            response = sys::avcodec_receive_frame(self.codec_ctx, self.frame);
+            response = sys::avcodec_receive_frame(self.codec_ctx, *frame);
 
             // eagain -> need to try again
             // eof -> input is over, not an actual error here
