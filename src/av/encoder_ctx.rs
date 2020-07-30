@@ -11,13 +11,14 @@ pub struct EncoderCtx {
     pub codec_ctx: *mut sys::AVCodecContext,
     pub codec: *mut sys::AVCodec,
     pub stream: *mut sys::AVStream,
+    pub path: String,
 }
 
 unsafe impl Send for EncoderCtx {}
 
 impl EncoderCtx {
-    pub fn new(path: &str, format: &str) -> EncoderCtx {
-        let path_str = utils::str_to_c_str(path);
+    pub fn new(path: String, format: &str) -> EncoderCtx {
+        let path_str = utils::str_to_c_str(path.as_str());
         let format_str = utils::str_to_c_str(format);
 
         let mut av: *mut sys::AVFormatContext = null_mut();
@@ -33,6 +34,7 @@ impl EncoderCtx {
             codec: null_mut(),
             codec_ctx: null_mut(),
             stream: null_mut(),
+            path: path,
         }
     }
 
@@ -65,8 +67,8 @@ impl EncoderCtx {
         }
     }
 
-    pub fn open_file(&mut self, path: &str) {
-        let path_str = utils::str_to_c_str(path);
+    pub fn open_file(&mut self) {
+        let path_str = utils::str_to_c_str(self.path.as_str());
 
         let response = unsafe {
             sys::avio_open(

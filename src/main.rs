@@ -3,6 +3,8 @@ mod canvas;
 mod cmds;
 mod filter;
 mod opts;
+mod pipeline;
+mod types;
 
 use clap::Clap;
 

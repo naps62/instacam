@@ -15,7 +15,7 @@ pub enum SubCommand {
     UI,
 }
 
-#[derive(Clap)]
+#[derive(Clap, Clone)]
 pub struct Forward {
     #[clap(short = "i", long = "input")]
     pub input: String,
@@ -29,4 +29,6 @@ pub struct Forward {
     pub height: i32,
     #[clap(short = "b", long = "blur", default_value = "20")]
     pub blur: i32,
+    #[clap(short = "f", long = "fps", default_value = "20")]
+    pub fps: i64,
 }

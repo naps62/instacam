@@ -6,6 +6,8 @@ use ffmpeg4_ffi::sys;
 
 use super::utils;
 
+use crate::opts;
+
 pub struct DecoderCtx {
     pub av: *mut sys::AVFormatContext,
     pub video_stream_index: usize,
@@ -16,38 +18,38 @@ pub struct DecoderCtx {
 }
 
 impl DecoderCtx {
-    pub fn open(path: &str, framerate: i64, width: i32, height: i32) -> DecoderCtx {
+    pub fn open(path: String, args: &opts::Forward) -> DecoderCtx {
         unsafe {
             let mut av = sys::avformat_alloc_context();
 
             let mut options: *mut sys::AVDictionary = null_mut();
 
             let framerate_key = utils::str_to_c_str("framerate");
-            sys::av_dict_set_int(&mut options, framerate_key.as_ptr(), framerate, 0);
+            sys::av_dict_set_int(&mut options, framerate_key.as_ptr(), args.fps, 0);
 
             sys::av_dict_set(
                 &mut options,
                 utils::str_to_c_str("video_size").as_ptr(),
-                utils::string_to_c_str(format!("{}x{}", width, height)).as_ptr(),
+                utils::string_to_c_str(format!("{}x{}", args.width, args.height)).as_ptr(),
                 0,
             );
 
             sys::av_dict_set(
                 &mut options,
                 utils::str_to_c_str("input_format").as_ptr(),
-                utils::str_to_c_str("yuyv422").as_ptr(),
+                utils::str_to_c_str("mjpeg").as_ptr(),
                 0,
             );
 
             let response = sys::avformat_open_input(
                 &mut av,
-                utils::str_to_c_str(path).as_ptr(),
+                utils::str_to_c_str(path.as_str()).as_ptr(),
                 null_mut(),
                 &mut options,
             );
 
             if utils::check_error(response) {
-                panic!("could not open {}", path);
+                panic!("could not open {}", path.as_str());
             }
 
             let mut decoder = DecoderCtx {

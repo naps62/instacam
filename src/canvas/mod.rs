@@ -10,12 +10,9 @@ use sdl2::render::TextureAccess;
 use sdl2::video::Window;
 use sdl2::EventPump;
 
-use std::sync::{Arc, Mutex};
+use crate::types;
 
-pub struct FrameMsg(pub *mut ffmpeg4_ffi::sys::AVFrame);
-unsafe impl Send for FrameMsg {}
-
-pub type ThreadSafeFrame = Arc<Mutex<FrameMsg>>;
+pub type ThreadSafeFrame = types::FrameMsg;
 
 pub fn create(
     width: i32,
@@ -55,7 +52,7 @@ fn render_loop(window: Window, event_pump: &mut EventPump, receiver: Receiver<Th
 
     'running: loop {
         let frame_msg = receiver.recv().expect("Failed to receive frame");
-        let frame = frame_msg.lock().unwrap().0;
+        let frame = frame_msg.0;
 
         let data = unsafe { slice::from_raw_parts((*frame).data[0], (width * height) as usize) };
         let linesize = unsafe { (*frame).linesize[0] };
