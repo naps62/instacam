@@ -3,22 +3,39 @@ extern crate sdl2;
 
 mod av;
 mod canvas;
-mod cmds;
 mod filter;
 mod opts;
 mod pipeline;
 mod types;
 
+use ffmpeg4_ffi::sys;
+
+use crate::av::decoder_ctx::DecoderCtx;
+use crate::av::encoder_ctx::EncoderCtx;
+
 use clap::Clap;
 
-use cmds::*;
-use opts::SubCommand::*;
-
 fn main() {
-    let opts = opts::Opts::parse();
+    let args = opts::Opts::parse();
 
-    match opts.subcmd {
-        Forward(args) => forward::run(args),
-        UI => ui::run(),
+    unsafe { sys::avdevice_register_all() };
+
+    let mut decoder = DecoderCtx::open(args.input.clone(), &args);
+    let mut encoder = EncoderCtx::new(args.output.clone(), &decoder);
+
+    let mut pipeline = pipeline::Pipeline::new(&args, &decoder);
+
+    let canvas = canvas::create(args.clone());
+
+    loop {
+        if let Some((_, ref sender)) = canvas {
+            sender.send(pipeline.fil_as_msg()).unwrap();
+        }
+
+        decoder.decode_frame(pipeline.raw_ref());
+
+        pipeline.process();
+
+        encoder.encode_frame(pipeline.yuv_ref());
     }
 }

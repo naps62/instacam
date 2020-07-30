@@ -18,7 +18,7 @@ pub struct DecoderCtx {
 }
 
 impl DecoderCtx {
-    pub fn open(path: String, args: &opts::Forward) -> DecoderCtx {
+    pub fn open(path: String, args: &opts::Opts) -> DecoderCtx {
         unsafe {
             let mut av = sys::avformat_alloc_context();
 

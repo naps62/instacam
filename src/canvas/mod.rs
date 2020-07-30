@@ -14,7 +14,7 @@ use crate::{opts, types};
 
 pub type ThreadSafeFrame = types::FrameMsg;
 
-pub fn create(args: opts::Forward) -> Option<(thread::JoinHandle<()>, Sender<ThreadSafeFrame>)> {
+pub fn create(args: opts::Opts) -> Option<(thread::JoinHandle<()>, Sender<ThreadSafeFrame>)> {
     if args.preview {
         None
     } else {

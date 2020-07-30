@@ -12,7 +12,7 @@ pub struct Pipeline {
     bgr: Frame,
     pub fil: Frame,
     yuv: Frame,
-    args: opts::Forward,
+    args: opts::Opts,
     raw2bgr: *mut sys::SwsContext,
     bgr2yuv: *mut sys::SwsContext,
 }
@@ -21,7 +21,7 @@ const BGR: sys::AVPixelFormat = sys::AVPixelFormat_AV_PIX_FMT_BGR24;
 const YUV: sys::AVPixelFormat = sys::AVPixelFormat_AV_PIX_FMT_YUVJ420P;
 
 impl Pipeline {
-    pub fn new(args: &opts::Forward, decoder_ctx: &DecoderCtx) -> Pipeline {
+    pub fn new(args: &opts::Opts, decoder_ctx: &DecoderCtx) -> Pipeline {
         let width = args.width;
         let height = args.height;
         let raw_format = unsafe { (*decoder_ctx.codec_ctx).pix_fmt };
