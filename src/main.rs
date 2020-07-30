@@ -8,20 +8,19 @@ mod opts;
 mod pipeline;
 mod types;
 
+use clap::Clap;
 use ffmpeg4_ffi::sys;
 
 use crate::av::decoder_ctx::DecoderCtx;
 use crate::av::encoder_ctx::EncoderCtx;
-
-use clap::Clap;
 
 fn main() {
     let args = opts::Opts::parse();
 
     unsafe { sys::avdevice_register_all() };
 
-    let mut decoder = DecoderCtx::open(args.input.clone(), &args);
-    let mut encoder = EncoderCtx::new(args.output.clone(), &decoder);
+    let mut decoder = DecoderCtx::open(&args);
+    let mut encoder = EncoderCtx::new(&args, &decoder);
 
     let mut pipeline = pipeline::Pipeline::new(&args, &decoder);
 

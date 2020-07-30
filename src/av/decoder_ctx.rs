@@ -18,8 +18,9 @@ pub struct DecoderCtx {
 }
 
 impl DecoderCtx {
-    pub fn open(path: String, args: &opts::Opts) -> DecoderCtx {
+    pub fn open(args: &opts::Opts) -> DecoderCtx {
         unsafe {
+            let path = args.input.clone();
             let mut av = sys::avformat_alloc_context();
 
             let mut options: *mut sys::AVDictionary = null_mut();
