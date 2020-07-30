@@ -24,11 +24,6 @@ fn main() {
     let canvas = canvas::create(args.clone());
 
     loop {
-        // if preview is enabled, update it
-        if let Some((_, ref sender)) = canvas {
-            sender.send(pipeline.fil_as_msg()).unwrap();
-        }
-
         // read a new frame from /dev/video0
         decoder.decode_frame(pipeline.raw_ref());
 
@@ -37,5 +32,10 @@ fn main() {
 
         // write the stuffed frame to /dev/video2
         encoder.encode_frame(pipeline.yuv_ref());
+
+        // if preview is enabled, update it
+        if let Some((_, ref sender)) = canvas {
+            sender.send(pipeline.fil_as_msg()).unwrap();
+        }
     }
 }

@@ -16,8 +16,6 @@ pub type ThreadSafeFrame = types::FrameMsg;
 
 pub fn create(args: opts::Opts) -> Option<(thread::JoinHandle<()>, Sender<ThreadSafeFrame>)> {
     if args.preview {
-        None
-    } else {
         let (sender, receiver) = crossbeam_channel::unbounded();
 
         let handle = thread::spawn(move || {
@@ -35,6 +33,8 @@ pub fn create(args: opts::Opts) -> Option<(thread::JoinHandle<()>, Sender<Thread
         });
 
         Some((handle, sender))
+    } else {
+        None
     }
 }
 
