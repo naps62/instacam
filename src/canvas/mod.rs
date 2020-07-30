@@ -2,7 +2,7 @@ use std::slice;
 use std::thread;
 use std::time::Duration;
 
-use crossbeam_channel::Receiver;
+use crossbeam_channel::{Receiver, Sender};
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::pixels;
@@ -10,28 +10,32 @@ use sdl2::render::TextureAccess;
 use sdl2::video::Window;
 use sdl2::EventPump;
 
-use crate::types;
+use crate::{opts, types};
 
 pub type ThreadSafeFrame = types::FrameMsg;
 
-pub fn create(
-    width: i32,
-    height: i32,
-    receiver: Receiver<ThreadSafeFrame>,
-) -> thread::JoinHandle<()> {
-    thread::spawn(move || {
-        let ctx = sdl2::init().unwrap();
-        let video_subsystem = ctx.video().unwrap();
-        let window = video_subsystem
-            .window("instacam", width as u32, height as u32)
-            .position_centered()
-            .build()
-            .unwrap();
+pub fn create(args: opts::Forward) -> Option<(thread::JoinHandle<()>, Sender<ThreadSafeFrame>)> {
+    if args.preview {
+        None
+    } else {
+        let (sender, receiver) = crossbeam_channel::unbounded();
 
-        let mut event_pump = ctx.event_pump().unwrap();
+        let handle = thread::spawn(move || {
+            let ctx = sdl2::init().unwrap();
+            let video_subsystem = ctx.video().unwrap();
+            let window = video_subsystem
+                .window("instacam", args.width as u32, args.height as u32)
+                .position_centered()
+                .build()
+                .unwrap();
 
-        render_loop(window, &mut event_pump, receiver);
-    })
+            let mut event_pump = ctx.event_pump().unwrap();
+
+            render_loop(window, &mut event_pump, receiver);
+        });
+
+        Some((handle, sender))
+    }
 }
 
 fn render_loop(window: Window, event_pump: &mut EventPump, receiver: Receiver<ThreadSafeFrame>) {

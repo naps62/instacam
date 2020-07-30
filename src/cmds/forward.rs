@@ -1,9 +1,3 @@
-extern crate crossbeam_channel;
-extern crate sdl2;
-
-use std::path::PathBuf;
-use std::time::Instant;
-
 use ffmpeg4_ffi::sys;
 
 use crate::av::decoder_ctx::DecoderCtx;
@@ -14,32 +8,21 @@ pub fn run(args: opts::Forward) {
     unsafe { sys::avdevice_register_all() };
 
     let mut decoder = DecoderCtx::open(args.input.clone(), &args);
-    let raw_pix_fmt = unsafe { (*decoder.codec_ctx).pix_fmt };
+    let mut encoder = EncoderCtx::new(args.output.clone(), &decoder);
 
-    let mut encoder = EncoderCtx::new(args.output.clone(), "v4l2");
-    encoder.load_stream(&decoder, sys::AVCodecID_AV_CODEC_ID_RAWVIDEO);
-    encoder.open_file();
+    let mut pipeline = pipeline::Pipeline::new(&args, &decoder);
 
-    let (sender, receiver) = crossbeam_channel::unbounded();
-
-    if args.preview {
-        canvas::create(args.width, args.height, receiver);
-    }
-
-    let mut pipeline = pipeline::Pipeline::new(&args, raw_pix_fmt);
+    let canvas = canvas::create(args.clone());
 
     loop {
-        println!("{:?}", raw_pix_fmt);
-        if args.preview {
+        if let Some((_, ref sender)) = canvas {
             sender.send(pipeline.fil_as_msg()).unwrap();
         }
 
-        println!("reading frame");
-        let now = Instant::now();
-        decoder.read_frame(pipeline.raw_ref());
-        println!("read frame: {}", now.elapsed().as_millis());
+        decoder.decode_frame(pipeline.raw_ref());
 
         pipeline.process();
-        encoder.encode(&decoder, pipeline.yuv_ref());
+
+        encoder.encode_frame(pipeline.yuv_ref());
     }
 }

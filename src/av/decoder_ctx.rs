@@ -104,7 +104,7 @@ impl DecoderCtx {
         }
     }
 
-    pub fn get_streams<'b>(&self) -> &'b [*mut sys::AVStream] {
+    fn get_streams<'b>(&self) -> &'b [*mut sys::AVStream] {
         unsafe {
             let ptr = (*self.av).streams;
             let count = (*self.av).nb_streams as usize;
@@ -117,7 +117,7 @@ impl DecoderCtx {
         self.get_streams()[i]
     }
 
-    pub fn read_frame(&mut self, frame: &*mut sys::AVFrame) {
+    pub fn decode_frame(&mut self, frame: &*mut sys::AVFrame) {
         unsafe {
             while sys::av_read_frame(self.av, self.packet) >= 0 {
                 if (*self.packet).stream_index as usize == self.video_stream_index {

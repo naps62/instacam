@@ -1,8 +1,8 @@
 use ffmpeg4_ffi::sys;
 
 use std::ptr::null_mut;
-use std::time::Instant;
 
+use crate::av::decoder_ctx::DecoderCtx;
 use crate::{filter, opts, types};
 
 type Frame = *mut sys::AVFrame;
@@ -21,9 +21,10 @@ const BGR: sys::AVPixelFormat = sys::AVPixelFormat_AV_PIX_FMT_BGR24;
 const YUV: sys::AVPixelFormat = sys::AVPixelFormat_AV_PIX_FMT_YUVJ420P;
 
 impl Pipeline {
-    pub fn new(args: &opts::Forward, raw_format: sys::AVPixelFormat) -> Pipeline {
+    pub fn new(args: &opts::Forward, decoder_ctx: &DecoderCtx) -> Pipeline {
         let width = args.width;
         let height = args.height;
+        let raw_format = unsafe { (*decoder_ctx.codec_ctx).pix_fmt };
 
         Pipeline {
             raw: unsafe { sys::av_frame_alloc() },
@@ -45,17 +46,9 @@ impl Pipeline {
     }
 
     pub fn process(&mut self) {
-        let now = Instant::now();
         sws_convert(self.raw2bgr, self.raw, self.bgr);
-        println!("raw 2 bgr: {}", now.elapsed().as_millis());
-
-        let now = Instant::now();
         filter::blur(self.bgr, self.fil, self.args.blur);
-        println!("bgr 2 bgr: {}", now.elapsed().as_millis());
-
-        let now = Instant::now();
         sws_convert(self.bgr2yuv, self.fil, self.yuv);
-        println!("bgr 2 yuv: {}\n\n", now.elapsed().as_millis());
     }
 
     pub fn fil_as_msg(&self) -> types::FrameMsg {

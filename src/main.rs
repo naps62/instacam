@@ -1,3 +1,6 @@
+extern crate crossbeam_channel;
+extern crate sdl2;
+
 mod av;
 mod canvas;
 mod cmds;
