@@ -26,7 +26,7 @@ pub fn pixelate(src_frame: Frame, dst_frame: Frame, ksize: i32) {
 
     let dst_size = dst.size().unwrap();
 
-    let mut tmp = unsafe { Mat::new_size(src.size().unwrap() / 16, CV_8UC3).unwrap() };
+    let mut tmp = unsafe { Mat::new_size(src.size().unwrap() / 32, CV_8UC3).unwrap() };
     let tmp_size = tmp.size().unwrap();
 
     imgproc::resize(
