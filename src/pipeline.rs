@@ -47,7 +47,7 @@ impl Pipeline {
 
     pub fn process(&mut self) {
         sws_convert(self.raw2bgr, self.raw, self.bgr);
-        filter::blur(self.bgr, self.fil, self.args.blur);
+        filter::pixelate(self.bgr, self.fil, self.args.blur);
         sws_convert(self.bgr2yuv, self.fil, self.yuv);
     }
 
