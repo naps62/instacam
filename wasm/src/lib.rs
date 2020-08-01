@@ -10,10 +10,16 @@ static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 #[wasm_bindgen]
 extern "C" {
-    fn alert(s: &str);
+    #[wasm_bindgen(js_namespace = console, js_name = log)]
+    fn js_log(s: &str);
 }
 
 #[wasm_bindgen]
-pub fn greet() {
-    alert("Hello, instacam-ui from wasm!");
+pub fn getSettings(settings: &str) -> String {
+    "{}".into()
+}
+
+#[wasm_bindgen]
+pub fn setSettings(settings: &str) {
+    js_log(format!("Hello, instacam-ui from wasm! {}", settings).as_str());
 }

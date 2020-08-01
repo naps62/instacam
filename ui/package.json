@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "craco build",
-    "eject": "craco eject",
-    "start": "craco start"
+    "build": "./node_modules/.bin/craco build",
+    "eject": "./node_modules/.bin/craco eject",
+    "start": "./node_modules/.bin/craco start"
   },
   "dependencies": {
     "@craco/craco": "^5.6.4",
@@ -16,6 +16,7 @@
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-scripts": "3.4.1",
+    "react-webcam": "^5.2.0",
     "typescript": "^3.7.5"
   },
   "devDependencies": {
