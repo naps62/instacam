@@ -15,11 +15,6 @@ extern "C" {
 }
 
 #[wasm_bindgen]
-pub fn getSettings(settings: &str) -> String {
-    "{}".into()
-}
-
-#[wasm_bindgen]
-pub fn setSettings(settings: &str) {
+pub fn set_settings(settings: &str) {
     js_log(format!("Hello, instacam-ui from wasm! {}", settings).as_str());
 }

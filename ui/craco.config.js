@@ -25,6 +25,7 @@ const wasmPlugin = {
           outDir: path.resolve(__dirname, "./src/wasm"),
         })
       );
+      console.log(webpackConfig);
       return webpackConfig;
     },
   },

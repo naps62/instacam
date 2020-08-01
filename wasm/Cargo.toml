@@ -3,6 +3,7 @@ name = "instacam-wasm"
 version = "0.1.0"
 authors = ["Miguel Palhas <mpalhas@gmail.com>"]
 edition = "2018"
+wasm-opt = false
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -32,3 +33,4 @@ wasm-bindgen-test = "0.3.13"
 [profile.release]
 # Tell `rustc` to optimize for small code size.
 opt-level = "s"
+

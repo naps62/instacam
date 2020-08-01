@@ -1,17 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { useWasm, useTakeEffect } from "../../utils/wasm";
+import * as Wasm from "../../wasm";
 import "./style.css";
 
 const Settings: React.FC = () => {
-  const wasm = useWasm();
+  const wasm = Wasm.use();
   const [settings, setSettings] = useState("");
 
-  // useTakeEffect(() => {
-  //   wasm.set_settings("asd");
-  // }, [wasm]);
-
-  useTakeEffect(() => {
-    setSettings("{}");
+  Wasm.useEffect(() => {
+    wasm.set_settings("asd");
   }, [wasm]);
 
   const onSubmit = (e: any) => {
