@@ -1,0 +1,6 @@
+/target
+**/*.rs.bk
+*.pmg
+*.mkv
+*.ts
+frames
