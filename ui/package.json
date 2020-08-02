@@ -3,12 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "./node_modules/.bin/craco build",
-    "eject": "./node_modules/.bin/craco eject",
-    "start": "./node_modules/.bin/craco start"
+    "build": "react-app-rewired build",
+    "eject": "react-app-rewired eject",
+    "start": "react-app-rewired start"
   },
   "dependencies": {
-    "@craco/craco": "^5.6.4",
     "@types/node": "^12.12.53",
     "@types/react": "^16.9.44",
     "@types/react-dom": "^16.9.8",
@@ -21,7 +20,9 @@
   },
   "devDependencies": {
     "@wasm-tool/wasm-pack-plugin": "^1.0.1",
-    "prettier": "^2.0.5"
+    "prettier": "^2.0.5",
+    "react-app-rewired": "^2.1.6",
+    "wasm-loader": "^1.3.0"
   },
   "eslintConfig": {
     "extends": "react-app"

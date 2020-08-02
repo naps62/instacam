@@ -1,30 +1,43 @@
 import React, { useState, useEffect } from "react";
-import * as Wasm from "../../wasm";
 import "./style.css";
 
 const Settings: React.FC = () => {
-  const wasm = Wasm.use();
+  const [wasm, setWasm] = useState();
   const [settings, setSettings] = useState("");
 
-  Wasm.useEffect(() => {
-    wasm.set_settings("asd");
+  useEffect(() => {
+    (async () => {
+      const wasm = await import("instacam-wasm");
+      setWasm(wasm);
+    })();
+  });
+
+  useEffect(() => {
+    if (!wasm) return;
+
+    console.log(wasm.get_settings());
   }, [wasm]);
 
   const onSubmit = (e: any) => {
-    console.log(e);
-    wasm.setSettings(settings);
+    e.preventDefault();
+    wasm.set_settings(settings);
   };
 
-  return (
-    <form onSubmit={onSubmit}>
-      <textarea
-        rows={20}
-        className="Settings"
-        value={JSON.stringify(settings, null, 2)}
-      />
-      <input type="submit" value="Save" />
-    </form>
-  );
+  if (!wasm) {
+    return <div>Loading</div>;
+  } else {
+    return (
+      <form onSubmit={onSubmit}>
+        <textarea
+          rows={20}
+          className="Settings"
+          defaultValue={settings}
+          onChange={(e) => setSettings(e.target.value)}
+        />
+        <input type="submit" value="Save" />
+      </form>
+    );
+  }
 };
 
 export default Settings;

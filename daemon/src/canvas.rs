@@ -54,7 +54,6 @@ fn render_loop(window: Window, event_pump: &mut EventPump, receiver: Receiver<Th
         )
         .unwrap();
 
-    println!("here");
     'running: loop {
         let frame_msg = receiver.recv().expect("Failed to receive frame");
         let frame = frame_msg.0;
