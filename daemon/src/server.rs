@@ -17,19 +17,6 @@ pub fn create(app: App) -> thread::JoinHandle<()> {
     })
 }
 
-fn make_cors() -> Cors {
-    CorsOptions {
-        allowed_origins: AllowedOrigins::some_exact(&["http://localhost:3000"]),
-        allowed_methods: vec![Method::Get, Method::Post]
-            .into_iter()
-            .map(From::from)
-            .collect(),
-        ..Default::default()
-    }
-    .to_cors()
-    .unwrap()
-}
-
 #[get("/settings")]
 fn get_settings(state: State<App>) -> String {
     state.lock().unwrap().get_settings()
@@ -37,7 +24,21 @@ fn get_settings(state: State<App>) -> String {
 
 #[post("/settings", data = "<settings>")]
 fn set_setting(settings: String, state: State<App>) -> status::Accepted<String> {
+    println!("{:?}", settings);
     state.lock().unwrap().set_settings(settings);
 
     status::Accepted(None)
+}
+
+fn make_cors() -> Cors {
+    CorsOptions {
+        allowed_origins: AllowedOrigins::some_exact(&["http://localhost:3000"]),
+        allowed_methods: vec![Method::Options, Method::Get, Method::Post]
+            .into_iter()
+            .map(From::from)
+            .collect(),
+        ..Default::default()
+    }
+    .to_cors()
+    .unwrap()
 }

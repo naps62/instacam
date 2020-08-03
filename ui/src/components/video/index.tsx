@@ -21,8 +21,6 @@ const Video: React.FC = () => {
     navigator.mediaDevices.enumerateDevices().then(handleDevices);
   }, [handleDevices]);
 
-  console.log(deviceId);
-
   let webcam = null;
   if (deviceId !== null && deviceId !== "") {
     webcam = (
