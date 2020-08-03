@@ -5,6 +5,9 @@ extern crate rocket_cors;
 
 extern crate crossbeam_channel;
 extern crate sdl2;
+#[macro_use]
+extern crate serde;
+extern crate serde_json;
 
 mod app;
 mod av;

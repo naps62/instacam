@@ -1,7 +1,7 @@
 use std::thread;
 
 use rocket::{http::Method, response::status, State};
-use rocket_cors::{AllowedHeaders, AllowedOrigins, Cors, CorsOptions, Error};
+use rocket_cors::{AllowedOrigins, Cors, CorsOptions};
 
 use crate::app::App;
 
@@ -18,16 +18,19 @@ pub fn create(app: App) -> thread::JoinHandle<()> {
 }
 
 #[get("/settings")]
-fn get_settings(state: State<App>) -> String {
-    state.lock().unwrap().get_settings()
+fn get_settings(state: State<App>) -> Result<String, serde_json::Error> {
+    state.lock().unwrap().get_settings().to_string()
 }
 
 #[post("/settings", data = "<settings>")]
-fn set_setting(settings: String, state: State<App>) -> status::Accepted<String> {
-    println!("{:?}", settings);
-    state.lock().unwrap().set_settings(settings);
-
-    status::Accepted(None)
+fn set_setting(
+    settings: String,
+    state: State<App>,
+) -> Result<status::Accepted<()>, status::BadRequest<()>> {
+    match state.lock().unwrap().set_settings(settings) {
+        Ok(_) => Ok(status::Accepted(None)),
+        Err(_) => Err(status::BadRequest(None)),
+    }
 }
 
 fn make_cors() -> Cors {
