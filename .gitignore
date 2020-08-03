@@ -4,3 +4,4 @@
 *.mkv
 *.ts
 frames
+node_modules/
