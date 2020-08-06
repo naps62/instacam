@@ -21,8 +21,12 @@ mod video_processor;
 fn main() {
     let app = app::new();
 
+    println!("starting server");
     let _server = server::create(app.clone());
-    let processor = video_processor::create(app.clone());
+    println!("starting processor");
+    let (processor, processor_sender) = video_processor::create(app.clone());
+
+    app.lock().unwrap().subscribe(processor_sender);
 
     let _ = processor.join();
 }

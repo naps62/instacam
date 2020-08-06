@@ -12,7 +12,12 @@ pub struct AppStruct {
     settings: Settings,
     opts: opts::Opts,
     #[allow(dead_code)]
-    subscribers: Vec<Sender<String>>,
+    subscribers: Vec<Sender<Messages>>,
+}
+
+#[derive(Clone)]
+pub enum Messages {
+    NewSettings(Settings),
 }
 
 pub type App = Arc<Mutex<AppStruct>>;
@@ -44,11 +49,19 @@ impl AppStruct {
 
         save_settings(&self.settings, SETTINGS);
 
+        self.broadcast(Messages::NewSettings(self.settings.clone()));
+
         Ok(())
     }
 
-    pub fn subscribe(&mut self, sender: Sender<String>) {
+    pub fn subscribe(&mut self, sender: Sender<Messages>) {
         self.subscribers.push(sender);
+    }
+
+    fn broadcast(&self, message: Messages) {
+        for sub in &self.subscribers {
+            let _ = sub.send(message.clone());
+        }
     }
 }
 

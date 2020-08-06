@@ -1,14 +1,17 @@
 use std::{os, thread};
 
+use crossbeam_channel;
 use ffmpeg4_ffi::sys;
 
+use crate::app::Messages;
 use crate::{app, av, canvas, pipeline};
 
-pub fn create(app: app::App) -> thread::JoinHandle<()> {
+pub fn create(app: app::App) -> (thread::JoinHandle<()>, crossbeam_channel::Sender<Messages>) {
     let opts = app.lock().unwrap().opts();
     let settings = app.lock().unwrap().get_settings();
+    let (sender, receiver) = crossbeam_channel::unbounded();
 
-    thread::spawn(move || {
+    let handle = thread::spawn(move || {
         prepare_libav();
 
         let mut decoder = av::decoder_ctx::DecoderCtx::open(&opts);
@@ -32,8 +35,18 @@ pub fn create(app: app::App) -> thread::JoinHandle<()> {
             if let Some((_, ref sender)) = canvas {
                 sender.send(pipeline.fil_as_msg()).unwrap();
             }
+
+            if let Ok(msg) = receiver.try_recv() {
+                match msg {
+                    Messages::NewSettings(settings) => {
+                        pipeline = pipeline::Pipeline::new(&opts, &settings, &decoder)
+                    }
+                }
+            }
         }
-    })
+    });
+
+    (handle, sender)
 }
 
 fn prepare_libav() {
