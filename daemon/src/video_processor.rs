@@ -6,6 +6,7 @@ use crate::{app, av, canvas, pipeline};
 
 pub fn create(app: app::App) -> thread::JoinHandle<()> {
     let opts = app.lock().unwrap().opts();
+    let settings = app.lock().unwrap().get_settings();
 
     thread::spawn(move || {
         prepare_libav();
@@ -13,7 +14,7 @@ pub fn create(app: app::App) -> thread::JoinHandle<()> {
         let mut decoder = av::decoder_ctx::DecoderCtx::open(&opts);
         let mut encoder = av::encoder_ctx::EncoderCtx::new(&opts, &decoder);
 
-        let mut pipeline = pipeline::Pipeline::new(&opts, &decoder);
+        let mut pipeline = pipeline::Pipeline::new(&opts, &settings, &decoder);
 
         let canvas = canvas::create(opts.clone());
 

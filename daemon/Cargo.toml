@@ -12,3 +12,6 @@ crossbeam-channel = "0.4"
 opencv = {version = "0.43", features = ["clang-runtime", "buildtime-bindgen"]}
 rocket = "0.4.5"
 rocket_cors = "0.5.0"
+serde_json = "1.0"
+serde_derive = "1.0.114"
+serde = { version = "1.0.114", features = ["derive"] }

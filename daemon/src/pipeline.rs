@@ -3,7 +3,8 @@ use ffmpeg4_ffi::sys;
 use std::ptr::null_mut;
 
 use crate::av::decoder_ctx::DecoderCtx;
-use crate::{filter, opts, types};
+use crate::filters::Filter;
+use crate::{app::settings::Settings, filters, opts::Opts, types};
 
 type Frame = *mut sys::AVFrame;
 
@@ -12,16 +13,18 @@ pub struct Pipeline {
     bgr: Frame,
     pub fil: Frame,
     yuv: Frame,
-    args: opts::Opts,
+    args: Opts,
     raw2bgr: *mut sys::SwsContext,
     bgr2yuv: *mut sys::SwsContext,
+    #[allow(dead_code)]
+    filters: Vec<Box<dyn Filter>>,
 }
 
 const BGR: sys::AVPixelFormat = sys::AVPixelFormat_AV_PIX_FMT_BGR24;
 const YUV: sys::AVPixelFormat = sys::AVPixelFormat_AV_PIX_FMT_YUVJ420P;
 
 impl Pipeline {
-    pub fn new(args: &opts::Opts, decoder_ctx: &DecoderCtx) -> Pipeline {
+    pub fn new(args: &Opts, settings: &Settings, decoder_ctx: &DecoderCtx) -> Pipeline {
         let width = args.width;
         let height = args.height;
         let raw_format = unsafe { (*decoder_ctx.codec_ctx).pix_fmt };
@@ -34,6 +37,7 @@ impl Pipeline {
             raw2bgr: sws_alloc(width, height, raw_format, BGR),
             bgr2yuv: sws_alloc(width, height, BGR, YUV),
             args: args.clone(),
+            filters: alloc_filters(&args, &settings),
         }
     }
 
@@ -47,16 +51,44 @@ impl Pipeline {
 
     pub fn process(&mut self) {
         sws_convert(self.raw2bgr, self.raw, self.bgr);
-        filter::pixelate(self.bgr, self.fil, self.args.blur);
-        sws_convert(self.bgr2yuv, self.fil, self.yuv);
+
+        let out = self
+            .filters
+            .iter_mut()
+            .fold(self.bgr, |frame, filter| filter.run(frame));
+
+        sws_convert(self.bgr2yuv, out, self.yuv);
     }
 
     pub fn fil_as_msg(&self) -> types::FrameMsg {
-        types::FrameMsg(self.fil.clone())
+        let frame = self.filters.last().unwrap().output();
+
+        types::FrameMsg(frame.clone())
     }
 }
 
-fn alloc_frame(width: i32, height: i32, format: sys::AVPixelFormat) -> *mut sys::AVFrame {
+pub fn alloc_filters(args: &Opts, settings: &Settings) -> Vec<Box<dyn Filter>> {
+    use crate::app::settings::Proc;
+    use filters::{blur, pixelate};
+
+    if let Some(procs) = &settings.pipeline {
+        procs
+            .iter()
+            .map(|proc| -> Box<dyn Filter> {
+                let frame = alloc_frame(args.width, args.height, BGR);
+
+                match proc {
+                    Proc::Blur { k } => Box::new(blur::Blur::new(*k, frame)),
+                    Proc::Pixelate { k } => Box::new(pixelate::Pixelate::new(*k, frame, &args)),
+                }
+            })
+            .collect()
+    } else {
+        vec![]
+    }
+}
+
+pub fn alloc_frame(width: i32, height: i32, format: sys::AVPixelFormat) -> *mut sys::AVFrame {
     unsafe {
         let frame = sys::av_frame_alloc();
 
