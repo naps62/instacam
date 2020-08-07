@@ -1,7 +1,9 @@
 extern crate opencv;
 
 pub mod blur;
+pub mod edges;
 pub mod pixelate;
+pub mod sepia;
 mod utils;
 
 use crate::types::Frame;

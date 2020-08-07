@@ -11,6 +11,8 @@ pub struct Settings {
 pub enum Proc {
     Blur { k: i32 },
     Pixelate { k: i32 },
+    Sepia,
+    Edges { t1: f64, t2: f64 },
 }
 
 impl Settings {
@@ -68,5 +70,18 @@ mod tests {
             s.pipeline.unwrap().get(0).unwrap(),
             &Proc::Pixelate { k: 20 }
         );
+    }
+
+    #[test]
+    fn decodes_sepia() {
+        let json = r#"
+        {"pipeline": [
+            {"name": "sepia"}
+        ]}
+        "#;
+
+        let s = Settings::new(json).unwrap();
+
+        assert_eq!(s.pipeline.unwrap().get(0).unwrap(), &Proc::Sepia);
     }
 }

@@ -68,8 +68,8 @@ impl Pipeline {
 }
 
 pub fn alloc_filters(args: &Opts, settings: &Settings) -> Vec<Box<dyn Filter>> {
-    use crate::app::settings::Proc;
-    use filters::{blur, pixelate};
+    use crate::app::settings::Proc::*;
+    use filters::*;
 
     if let Some(procs) = &settings.pipeline {
         procs
@@ -78,8 +78,10 @@ pub fn alloc_filters(args: &Opts, settings: &Settings) -> Vec<Box<dyn Filter>> {
                 let frame = alloc_frame(args.width, args.height, BGR);
 
                 match proc {
-                    Proc::Blur { k } => Box::new(blur::Blur::new(*k, frame)),
-                    Proc::Pixelate { k } => Box::new(pixelate::Pixelate::new(*k, frame, &args)),
+                    Blur { k } => Box::new(blur::new(*k, frame)),
+                    Pixelate { k } => Box::new(pixelate::new(*k, frame, &args)),
+                    Sepia => Box::new(sepia::new(frame)),
+                    Edges { t1, t2 } => Box::new(edges::new(*t1, *t2, frame)),
                 }
             })
             .collect()

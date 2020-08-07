@@ -11,10 +11,8 @@ pub struct Blur {
     out: Frame,
 }
 
-impl Blur {
-    pub fn new(k: i32, out: Frame) -> Blur {
-        Blur { k, out }
-    }
+pub fn new(k: i32, out: Frame) -> Blur {
+    Blur { k, out }
 }
 
 impl Filter for Blur {

@@ -14,12 +14,10 @@ pub struct Pixelate {
     out: Frame,
 }
 
-impl Pixelate {
-    pub fn new(k: i32, out: Frame, opts: &opts::Opts) -> Pixelate {
-        let tmp = unsafe { Mat::new_size(Size::new(k, k), CV_8UC3).unwrap() };
+pub fn new(k: i32, out: Frame, opts: &opts::Opts) -> Pixelate {
+    let tmp = unsafe { Mat::new_size(Size::new(k, k), CV_8UC3).unwrap() };
 
-        Pixelate { k, tmp, out }
-    }
+    Pixelate { k, tmp, out }
 }
 
 impl Filter for Pixelate {
