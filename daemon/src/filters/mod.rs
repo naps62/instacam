@@ -4,6 +4,7 @@ pub mod blur;
 pub mod edges;
 pub mod pixelate;
 pub mod sepia;
+pub mod sharpen;
 mod utils;
 
 use crate::types::Frame;
