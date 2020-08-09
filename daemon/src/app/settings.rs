@@ -13,6 +13,7 @@ pub enum Proc {
     Pixelate { k: i32 },
     Sepia,
     Edges { t1: f64, t2: f64 },
+    BgSub,
 }
 
 impl Settings {

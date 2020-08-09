@@ -82,6 +82,7 @@ pub fn alloc_filters(args: &Opts, settings: &Settings) -> Vec<Box<dyn Filter>> {
                     Pixelate { k } => Box::new(pixelate::new(*k, frame, &args)),
                     Sepia => Box::new(sepia::new(frame)),
                     Edges { t1, t2 } => Box::new(edges::new(*t1, *t2, frame)),
+                    BgSub => Box::new(bgsub::new(frame)),
                 }
             })
             .collect()

@@ -9,7 +9,7 @@ ffmpeg4-ffi = "0.3.8"
 clap = "3.0.0-beta.1"
 sdl2 = "0.34"
 crossbeam-channel = "0.4"
-opencv = {version = "0.43", features = ["clang-runtime", "buildtime-bindgen"]}
+opencv = {version = "0.43", features = ["clang-runtime", "buildtime-bindgen", "contrib"]}
 rocket = "0.4.5"
 rocket_cors = "0.5.0"
 serde_json = "1.0"
