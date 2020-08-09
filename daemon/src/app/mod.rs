@@ -5,12 +5,12 @@ use std::sync::{Arc, Mutex};
 use clap::Clap;
 use crossbeam_channel::Sender;
 
-use crate::opts;
+use crate::args::Args;
 use settings::Settings;
 
 pub struct AppStruct {
     settings: Settings,
-    opts: opts::Opts,
+    args: Args,
     #[allow(dead_code)]
     subscribers: Vec<Sender<Messages>>,
 }
@@ -26,7 +26,7 @@ const SETTINGS: &str = "/home/naps62/.config/instacam/config.json";
 
 pub fn new() -> Arc<Mutex<AppStruct>> {
     let app = AppStruct {
-        opts: opts::Opts::parse(),
+        args: Args::parse(),
         settings: load_settings(SETTINGS),
         subscribers: Vec::new(),
     };
@@ -36,8 +36,8 @@ pub fn new() -> Arc<Mutex<AppStruct>> {
 }
 
 impl AppStruct {
-    pub fn opts(&self) -> opts::Opts {
-        self.opts.clone()
+    pub fn args(&self) -> Args {
+        self.args.clone()
     }
 
     pub fn get_settings(&self) -> Settings {

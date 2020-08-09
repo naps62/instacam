@@ -3,6 +3,10 @@ use serde_json::Result;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Settings {
+    pub input: String,
+    pub output: String,
+    pub width: i32,
+    pub height: i32,
     pub pipeline: Option<Vec<Proc>>,
 }
 

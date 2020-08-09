@@ -4,7 +4,6 @@ use opencv::prelude::*;
 
 use super::{utils, Filter};
 
-use crate::opts;
 use crate::types::Frame;
 
 #[derive(Clone, Debug)]
@@ -14,7 +13,7 @@ pub struct Pixelate {
     out: Frame,
 }
 
-pub fn new(k: i32, out: Frame, opts: &opts::Opts) -> Pixelate {
+pub fn new(k: i32, out: Frame) -> Pixelate {
     let tmp = unsafe { Mat::new_size(Size::new(k, k), CV_8UC3).unwrap() };
 
     Pixelate { k, tmp, out }

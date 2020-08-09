@@ -1,6 +1,7 @@
 #![feature(proc_macro_hygiene, decl_macro)]
 #[macro_use]
 extern crate rocket;
+extern crate rocket_contrib;
 extern crate rocket_cors;
 
 extern crate crossbeam_channel;
@@ -9,10 +10,9 @@ extern crate serde;
 extern crate serde_json;
 
 mod app;
+mod args;
 mod av;
-mod canvas;
 mod filters;
-mod opts;
 mod pipeline;
 mod server;
 mod types;

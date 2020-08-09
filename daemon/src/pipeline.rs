@@ -4,7 +4,7 @@ use std::ptr::null_mut;
 
 use crate::av::decoder_ctx::DecoderCtx;
 use crate::filters::Filter;
-use crate::{app::settings::Settings, filters, opts::Opts, types};
+use crate::{app::settings::Settings, args::Args, filters};
 
 type Frame = *mut sys::AVFrame;
 
@@ -13,7 +13,6 @@ pub struct Pipeline {
     bgr: Frame,
     pub fil: Frame,
     yuv: Frame,
-    args: Opts,
     raw2bgr: *mut sys::SwsContext,
     bgr2yuv: *mut sys::SwsContext,
     #[allow(dead_code)]
@@ -24,7 +23,7 @@ const BGR: sys::AVPixelFormat = sys::AVPixelFormat_AV_PIX_FMT_BGR24;
 const YUV: sys::AVPixelFormat = sys::AVPixelFormat_AV_PIX_FMT_YUVJ420P;
 
 impl Pipeline {
-    pub fn new(args: &Opts, settings: &Settings, decoder_ctx: &DecoderCtx) -> Pipeline {
+    pub fn new(args: &Args, settings: &Settings, decoder_ctx: &DecoderCtx) -> Pipeline {
         let width = args.width;
         let height = args.height;
         let raw_format = unsafe { (*decoder_ctx.codec_ctx).pix_fmt };
@@ -36,7 +35,6 @@ impl Pipeline {
             yuv: alloc_frame(width, height, YUV),
             raw2bgr: sws_alloc(width, height, raw_format, BGR),
             bgr2yuv: sws_alloc(width, height, BGR, YUV),
-            args: args.clone(),
             filters: alloc_filters(&args, &settings),
         }
     }
@@ -59,15 +57,9 @@ impl Pipeline {
 
         sws_convert(self.bgr2yuv, out, self.yuv);
     }
-
-    pub fn fil_as_msg(&self) -> types::FrameMsg {
-        let frame = self.filters.last().unwrap().output();
-
-        types::FrameMsg(frame.clone())
-    }
 }
 
-pub fn alloc_filters(args: &Opts, settings: &Settings) -> Vec<Box<dyn Filter>> {
+pub fn alloc_filters(args: &Args, settings: &Settings) -> Vec<Box<dyn Filter>> {
     use crate::app::settings::Proc::*;
     use filters::*;
 
@@ -79,7 +71,7 @@ pub fn alloc_filters(args: &Opts, settings: &Settings) -> Vec<Box<dyn Filter>> {
 
                 match proc {
                     Blur { k } => Box::new(blur::new(*k, frame)),
-                    Pixelate { k } => Box::new(pixelate::new(*k, frame, &args)),
+                    Pixelate { k } => Box::new(pixelate::new(*k, frame)),
                     Sepia => Box::new(sepia::new(frame)),
                     Edges { t1, t2 } => Box::new(edges::new(*t1, *t2, frame)),
                 }

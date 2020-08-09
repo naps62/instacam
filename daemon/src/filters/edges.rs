@@ -1,4 +1,4 @@
-use opencv::core::{self, Mat, Size, CV_8UC1};
+use opencv::core::{Mat, CV_8UC1};
 use opencv::imgproc;
 use opencv::prelude::*;
 

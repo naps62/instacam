@@ -6,7 +6,7 @@ use ffmpeg4_ffi::sys;
 
 use super::utils;
 
-use crate::opts;
+use crate::args::Args;
 
 pub struct DecoderCtx {
     pub av: *mut sys::AVFormatContext,
@@ -18,7 +18,7 @@ pub struct DecoderCtx {
 }
 
 impl DecoderCtx {
-    pub fn open(args: &opts::Opts) -> DecoderCtx {
+    pub fn open(args: &Args) -> DecoderCtx {
         unsafe {
             let path = args.input.clone();
             let mut av = sys::avformat_alloc_context();

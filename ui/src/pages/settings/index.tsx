@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from "react";
+
+import Button from "@material-ui/core/Button";
+
 import axios from "axios";
 import "./style.css";
 
 const fetchSettings = async (callback: Function) => {
   try {
-    const { data } = await axios("http:///localhost:8000/settings");
+    const { data } = await axios("http:///localhost:8000/api/settings");
 
     callback(data);
   } catch (err) {
@@ -16,7 +19,7 @@ const updateSettings = async (settings: String) => {
   try {
     await axios({
       method: "post",
-      url: "http://localhost:8000/settings",
+      url: "http://localhost:8000/api/settings",
       data: settings,
     });
   } catch (err) {
@@ -28,7 +31,9 @@ const Settings: React.FC = () => {
   const [settings, setSettings] = useState("");
 
   useEffect(() => {
-    fetchSettings((settings: JSON) => setSettings(JSON.stringify(settings)));
+    fetchSettings((settings: JSON) =>
+      setSettings(JSON.stringify(settings, undefined, 2))
+    );
   }, []);
 
   const onSubmit = (e: any) => {
@@ -45,12 +50,14 @@ const Settings: React.FC = () => {
   return (
     <form onSubmit={onSubmit}>
       <textarea
-        rows={20}
+        rows={30}
         className="Settings"
         defaultValue={settings}
         onChange={(e) => setSettings(e.target.value)}
       />
-      <input type="submit" value="Save" />
+      <Button variant="contained" color="primary" type="submit">
+        Save
+      </Button>
     </form>
   );
 };

@@ -1,18 +1,20 @@
 use std::thread;
 
 use rocket::{http::Method, response::status, State};
+use rocket_contrib::serve::StaticFiles;
 use rocket_cors::{AllowedOrigins, Cors, CorsOptions};
 
 use crate::app::App;
 
 pub fn create(app: App) -> thread::JoinHandle<()> {
     thread::spawn(move || {
-        let routes = routes![get_settings, set_setting];
+        let api = routes![get_settings, set_setting];
 
         rocket::ignite()
             .attach(make_cors())
             .manage(app)
-            .mount("/", routes)
+            .mount("/", StaticFiles::from("../ui/build/"))
+            .mount("/api", api)
             .launch();
     })
 }

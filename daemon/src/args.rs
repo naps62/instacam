@@ -4,15 +4,12 @@ use clap::Clap;
 
 #[derive(Clap, Clone)]
 #[clap(version = "1.0", author = "Miguel Palhas <mpalhas@gmail.com")]
-pub struct Opts {
+pub struct Args {
     #[clap(short = "i", long = "input")]
     pub input: String,
 
     #[clap(short = "o", long = "output")]
     pub output: String,
-
-    #[clap(short = "p", long = "preview")]
-    pub preview: bool,
 
     #[clap(short = "w", long = "width", default_value = "640")]
     pub width: i32,

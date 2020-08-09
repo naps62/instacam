@@ -4,22 +4,20 @@ use crossbeam_channel;
 use ffmpeg4_ffi::sys;
 
 use crate::app::Messages;
-use crate::{app, av, canvas, pipeline};
+use crate::{app, av, pipeline};
 
 pub fn create(app: app::App) -> (thread::JoinHandle<()>, crossbeam_channel::Sender<Messages>) {
-    let opts = app.lock().unwrap().opts();
+    let args = app.lock().unwrap().args();
     let settings = app.lock().unwrap().get_settings();
     let (sender, receiver) = crossbeam_channel::unbounded();
 
     let handle = thread::spawn(move || {
         prepare_libav();
 
-        let mut decoder = av::decoder_ctx::DecoderCtx::open(&opts);
-        let mut encoder = av::encoder_ctx::EncoderCtx::new(&opts, &decoder);
+        let mut decoder = av::decoder_ctx::DecoderCtx::open(&args);
+        let mut encoder = av::encoder_ctx::EncoderCtx::new(&args, &decoder);
 
-        let mut pipeline = pipeline::Pipeline::new(&opts, &settings, &decoder);
-
-        let canvas = canvas::create(opts.clone());
+        let mut pipeline = pipeline::Pipeline::new(&args, &settings, &decoder);
 
         loop {
             // read a new frame from /dev/video0
@@ -31,15 +29,10 @@ pub fn create(app: app::App) -> (thread::JoinHandle<()>, crossbeam_channel::Send
             // write the stuffed frame to /dev/video2
             encoder.encode_frame(pipeline.yuv_ref());
 
-            // if preview is enabled, update it
-            if let Some((_, ref sender)) = canvas {
-                sender.send(pipeline.fil_as_msg()).unwrap();
-            }
-
             if let Ok(msg) = receiver.try_recv() {
                 match msg {
                     Messages::NewSettings(settings) => {
-                        pipeline = pipeline::Pipeline::new(&opts, &settings, &decoder)
+                        pipeline = pipeline::Pipeline::new(&args, &settings, &decoder)
                     }
                 }
             }
