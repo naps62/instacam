@@ -4,7 +4,7 @@ use opencv::prelude::*;
 
 use super::{utils, Filter};
 
-use crate::types::Frame;
+use crate::{av, types::Frame};
 
 #[derive(Clone, Debug)]
 pub struct Edges {
@@ -34,5 +34,11 @@ impl Filter for Edges {
 
     fn output(&self) -> Frame {
         self.out
+    }
+}
+
+impl Drop for Edges {
+    fn drop(&mut self) {
+        av::utils::free_frame(&mut self.out);
     }
 }

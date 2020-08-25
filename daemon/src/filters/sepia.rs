@@ -2,7 +2,7 @@ use opencv::core::{self, Mat};
 
 use super::{utils, Filter};
 
-use crate::types::Frame;
+use crate::{av, types::Frame};
 
 #[derive(Clone, Debug)]
 pub struct Sepia {
@@ -33,5 +33,11 @@ impl Filter for Sepia {
 
     fn output(&self) -> Frame {
         self.out
+    }
+}
+
+impl Drop for Sepia {
+    fn drop(&mut self) {
+        av::utils::free_frame(&mut self.out);
     }
 }

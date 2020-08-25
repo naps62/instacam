@@ -3,7 +3,7 @@ use opencv::imgproc;
 
 use super::{utils, Filter};
 
-use crate::types::Frame;
+use crate::{av, types::Frame};
 
 #[derive(Clone, Debug)]
 pub struct Blur {
@@ -34,5 +34,11 @@ impl Filter for Blur {
 
     fn output(&self) -> Frame {
         self.out
+    }
+}
+
+impl Drop for Blur {
+    fn drop(&mut self) {
+        av::utils::free_frame(&mut self.out);
     }
 }

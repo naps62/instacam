@@ -70,7 +70,6 @@ fn load_settings(file: &str) -> Settings {
         Ok(contents) => contents,
         Err(_) => String::from("{}"),
     };
-    println!("{:?}", json);
 
     Settings::new(json.as_str()).unwrap()
 }

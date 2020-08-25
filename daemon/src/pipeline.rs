@@ -1,8 +1,6 @@
 use ffmpeg4_ffi::sys;
 
-use std::ptr::null_mut;
-
-use crate::av::decoder_ctx::DecoderCtx;
+use crate::av::{self, decoder_ctx::DecoderCtx};
 use crate::filters::Filter;
 use crate::{app::settings::Settings, args::Args, filters};
 
@@ -11,7 +9,6 @@ type Frame = *mut sys::AVFrame;
 pub struct Pipeline {
     raw: Frame,
     bgr: Frame,
-    pub fil: Frame,
     yuv: Frame,
     raw2bgr: *mut sys::SwsContext,
     bgr2yuv: *mut sys::SwsContext,
@@ -30,11 +27,10 @@ impl Pipeline {
 
         Pipeline {
             raw: unsafe { sys::av_frame_alloc() },
-            bgr: alloc_frame(width, height, BGR),
-            fil: alloc_frame(width, height, BGR),
-            yuv: alloc_frame(width, height, YUV),
-            raw2bgr: sws_alloc(width, height, raw_format, BGR),
-            bgr2yuv: sws_alloc(width, height, BGR, YUV),
+            bgr: av::utils::alloc_frame(width, height, BGR),
+            yuv: av::utils::alloc_frame(width, height, YUV),
+            raw2bgr: av::utils::alloc_sws(width, height, raw_format, BGR),
+            bgr2yuv: av::utils::alloc_sws(width, height, BGR, YUV),
             filters: alloc_filters(&args, &settings),
         }
     }
@@ -59,6 +55,17 @@ impl Pipeline {
     }
 }
 
+impl Drop for Pipeline {
+    fn drop(&mut self) {
+        println!("dropping");
+        av::utils::free_frame(&mut self.raw);
+        av::utils::free_frame(&mut self.bgr);
+        av::utils::free_frame(&mut self.yuv);
+        av::utils::free_sws(self.raw2bgr);
+        av::utils::free_sws(self.bgr2yuv);
+    }
+}
+
 pub fn alloc_filters(args: &Args, settings: &Settings) -> Vec<Box<dyn Filter>> {
     use crate::app::settings::Proc::*;
     use filters::*;
@@ -67,7 +74,7 @@ pub fn alloc_filters(args: &Args, settings: &Settings) -> Vec<Box<dyn Filter>> {
         procs
             .iter()
             .map(|proc| -> Box<dyn Filter> {
-                let frame = alloc_frame(args.width, args.height, BGR);
+                let frame = av::utils::alloc_frame(args.width, args.height, BGR);
 
                 match proc {
                     Blur { k } => Box::new(blur::new(*k, frame)),
@@ -80,55 +87,6 @@ pub fn alloc_filters(args: &Args, settings: &Settings) -> Vec<Box<dyn Filter>> {
             .collect()
     } else {
         vec![]
-    }
-}
-
-pub fn alloc_frame(width: i32, height: i32, format: sys::AVPixelFormat) -> *mut sys::AVFrame {
-    unsafe {
-        let frame = sys::av_frame_alloc();
-
-        (*frame).width = width;
-        (*frame).height = height;
-        (*frame).format = format;
-
-        sys::av_frame_get_buffer(frame, 0);
-
-        let size = sys::avpicture_get_size(format, width, height);
-        let buffer = sys::av_malloc(size as usize);
-
-        sys::avpicture_fill(
-            frame as *mut sys::AVPicture,
-            buffer as *mut u8,
-            format,
-            width,
-            height,
-        );
-
-        (*frame).pts = 0;
-
-        frame
-    }
-}
-
-pub fn sws_alloc(
-    width: i32,
-    height: i32,
-    from: sys::AVPixelFormat,
-    to: sys::AVPixelFormat,
-) -> *mut sys::SwsContext {
-    unsafe {
-        sys::sws_getContext(
-            width,
-            height,
-            from,
-            width,
-            height,
-            to,
-            sys::SWS_BILINEAR as i32,
-            null_mut(),
-            null_mut(),
-            null_mut(),
-        )
     }
 }
 

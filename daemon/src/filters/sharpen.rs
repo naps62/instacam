@@ -3,7 +3,7 @@ use opencv::imgproc;
 
 use super::{utils, Filter};
 
-use crate::types::Frame;
+use crate::{av, types::Frame};
 
 #[derive(Clone, Debug)]
 pub struct Sharpen {
@@ -39,5 +39,11 @@ impl Filter for Sharpen {
 
     fn output(&self) -> Frame {
         self.out
+    }
+}
+
+impl Drop for Sharpen {
+    fn drop(&mut self) {
+        av::utils::free_frame(&mut self.out);
     }
 }

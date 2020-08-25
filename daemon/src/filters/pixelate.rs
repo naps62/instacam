@@ -4,7 +4,7 @@ use opencv::prelude::*;
 
 use super::{utils, Filter};
 
-use crate::types::Frame;
+use crate::{av, types::Frame};
 
 #[derive(Clone, Debug)]
 pub struct Pixelate {
@@ -52,5 +52,11 @@ impl Filter for Pixelate {
 
     fn output(&self) -> Frame {
         self.out
+    }
+}
+
+impl Drop for Pixelate {
+    fn drop(&mut self) {
+        av::utils::free_frame(&mut self.out);
     }
 }
