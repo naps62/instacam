@@ -13,6 +13,7 @@ pub fn create(app: App) -> thread::JoinHandle<()> {
         rocket::ignite()
             .attach(make_cors())
             .manage(app)
+            .mount("/", StaticFiles)
             .mount("/", StaticFiles::from("../ui/build/"))
             .mount("/api", api)
             .launch();
