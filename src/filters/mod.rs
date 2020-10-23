@@ -3,6 +3,7 @@ extern crate opencv;
 pub mod blur;
 pub mod edges;
 pub mod pixelate;
+pub mod preview;
 pub mod sepia;
 pub mod sharpen;
 mod utils;

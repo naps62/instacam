@@ -22,4 +22,7 @@ pub struct Args {
 
     #[clap(short = 'f', long = "fps", default_value = "20")]
     pub fps: i64,
+
+    #[clap(short = 'p', long = "preview")]
+    pub preview: bool,
 }

@@ -82,6 +82,7 @@ pub fn alloc_filters(args: &Args, settings: &Settings) -> Vec<Box<dyn Filter>> {
                     Sepia => Box::new(sepia::new(frame)),
                     Edges { t1, t2 } => Box::new(edges::new(*t1, *t2, frame)),
                     Sharpen => Box::new(sharpen::new(frame)),
+                    Preview => Box::new(preview::new(frame)),
                 }
             })
             .collect()

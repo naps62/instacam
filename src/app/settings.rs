@@ -8,6 +8,9 @@ pub struct Settings {
     pub width: i32,
     pub height: i32,
     pub pipeline: Option<Vec<Proc>>,
+
+    #[serde(default)]
+    pub preview: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -18,6 +21,7 @@ pub enum Proc {
     Sepia,
     Edges { t1: f64, t2: f64 },
     Sharpen,
+    Preview,
 }
 
 impl Settings {
@@ -25,6 +29,7 @@ impl Settings {
         serde_json::from_str(settings)
     }
 
+    #[allow(dead_code)]
     pub fn to_string(&self) -> Result<String> {
         serde_json::to_string_pretty(self)
     }
