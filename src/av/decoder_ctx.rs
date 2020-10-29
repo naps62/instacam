@@ -6,7 +6,7 @@ use ffmpeg4_ffi::sys;
 
 use super::utils;
 
-use crate::args::Args;
+use crate::app::settings::Settings;
 
 pub struct DecoderCtx {
     pub av: *mut sys::AVFormatContext,
@@ -18,20 +18,21 @@ pub struct DecoderCtx {
 }
 
 impl DecoderCtx {
-    pub fn open(args: &Args) -> DecoderCtx {
+    pub fn open(settings: &Settings) -> DecoderCtx {
         unsafe {
-            let path = args.input.clone();
+            let path = settings.input.clone();
+
             let mut av = sys::avformat_alloc_context();
 
             let mut options: *mut sys::AVDictionary = null_mut();
 
             let framerate_key = utils::str_to_c_str("framerate");
-            sys::av_dict_set_int(&mut options, framerate_key.as_ptr(), args.fps, 0);
+            sys::av_dict_set_int(&mut options, framerate_key.as_ptr(), settings.fps, 0);
 
             sys::av_dict_set(
                 &mut options,
                 utils::str_to_c_str("video_size").as_ptr(),
-                utils::string_to_c_str(format!("{}x{}", args.width, args.height)).as_ptr(),
+                utils::string_to_c_str(format!("{}x{}", settings.width, settings.height)).as_ptr(),
                 0,
             );
 
@@ -49,6 +50,7 @@ impl DecoderCtx {
                 &mut options,
             );
 
+            println!("{:?}", response);
             if utils::check_error(response) {
                 panic!("could not open {}", path.as_str());
             }

@@ -2,7 +2,7 @@ use ffmpeg4_ffi::sys;
 
 use crate::av::{self, decoder_ctx::DecoderCtx};
 use crate::filters::Filter;
-use crate::{app::settings::Settings, args::Args, filters};
+use crate::{app::settings::Settings, filters};
 
 type Frame = *mut sys::AVFrame;
 
@@ -20,9 +20,9 @@ const BGR: sys::AVPixelFormat = sys::AVPixelFormat_AV_PIX_FMT_BGR24;
 const YUV: sys::AVPixelFormat = sys::AVPixelFormat_AV_PIX_FMT_YUVJ420P;
 
 impl Pipeline {
-    pub fn new(args: &Args, settings: &Settings, decoder_ctx: &DecoderCtx) -> Pipeline {
-        let width = args.width;
-        let height = args.height;
+    pub fn new(settings: &Settings, decoder_ctx: &DecoderCtx) -> Pipeline {
+        let width = settings.width;
+        let height = settings.height;
         let raw_format = unsafe { (*decoder_ctx.codec_ctx).pix_fmt };
 
         Pipeline {
@@ -31,7 +31,7 @@ impl Pipeline {
             yuv: av::utils::alloc_frame(width, height, YUV),
             raw2bgr: av::utils::alloc_sws(width, height, raw_format, BGR),
             bgr2yuv: av::utils::alloc_sws(width, height, BGR, YUV),
-            filters: alloc_filters(&args, &settings),
+            filters: alloc_filters(&settings),
         }
     }
 
@@ -57,7 +57,6 @@ impl Pipeline {
 
 impl Drop for Pipeline {
     fn drop(&mut self) {
-        println!("dropping");
         av::utils::free_frame(&mut self.raw);
         av::utils::free_frame(&mut self.bgr);
         av::utils::free_frame(&mut self.yuv);
@@ -66,7 +65,7 @@ impl Drop for Pipeline {
     }
 }
 
-pub fn alloc_filters(args: &Args, settings: &Settings) -> Vec<Box<dyn Filter>> {
+pub fn alloc_filters(settings: &Settings) -> Vec<Box<dyn Filter>> {
     use crate::app::settings::Proc::*;
     use filters::*;
 
@@ -74,7 +73,7 @@ pub fn alloc_filters(args: &Args, settings: &Settings) -> Vec<Box<dyn Filter>> {
         procs
             .iter()
             .map(|proc| -> Box<dyn Filter> {
-                let frame = av::utils::alloc_frame(args.width, args.height, BGR);
+                let frame = av::utils::alloc_frame(settings.width, settings.height, BGR);
 
                 match proc {
                     Blur { k } => Box::new(blur::new(*k, frame)),
@@ -82,7 +81,8 @@ pub fn alloc_filters(args: &Args, settings: &Settings) -> Vec<Box<dyn Filter>> {
                     Sepia => Box::new(sepia::new(frame)),
                     Edges { t1, t2 } => Box::new(edges::new(*t1, *t2, frame)),
                     Sharpen => Box::new(sharpen::new(frame)),
-                    Preview => Box::new(preview::new(frame)),
+                    Preview => Box::new(preview::new(settings.width, settings.height, frame)),
+                    BgSub => Box::new(bgsub::new(frame)),
                 }
             })
             .collect()

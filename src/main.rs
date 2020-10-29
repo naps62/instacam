@@ -3,7 +3,6 @@ extern crate serde;
 extern crate serde_json;
 
 mod app;
-mod args;
 mod av;
 mod filters;
 mod pipeline;

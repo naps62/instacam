@@ -1,5 +1,6 @@
 extern crate opencv;
 
+pub mod bgsub;
 pub mod blur;
 pub mod edges;
 pub mod pixelate;

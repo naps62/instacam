@@ -2,14 +2,10 @@ pub mod settings;
 
 use std::sync::{Arc, Mutex};
 
-use clap::Clap;
-
-use crate::args::Args;
 use settings::Settings;
 
 pub struct AppStruct {
     settings: Settings,
-    args: Args,
 }
 
 pub type App = Arc<Mutex<AppStruct>>;
@@ -18,7 +14,6 @@ const SETTINGS: &str = "/home/naps62/.config/instacam/config.json";
 
 pub fn new() -> Arc<Mutex<AppStruct>> {
     let app = AppStruct {
-        args: Args::parse(),
         settings: load_settings(SETTINGS),
     };
 
@@ -26,10 +21,6 @@ pub fn new() -> Arc<Mutex<AppStruct>> {
 }
 
 impl AppStruct {
-    pub fn args(&self) -> Args {
-        self.args.clone()
-    }
-
     pub fn get_settings(&self) -> Settings {
         self.settings.clone()
     }

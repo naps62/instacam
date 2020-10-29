@@ -7,10 +7,8 @@ pub struct Settings {
     pub output: String,
     pub width: i32,
     pub height: i32,
+    pub fps: i64,
     pub pipeline: Option<Vec<Proc>>,
-
-    #[serde(default)]
-    pub preview: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -22,6 +20,7 @@ pub enum Proc {
     Edges { t1: f64, t2: f64 },
     Sharpen,
     Preview,
+    BgSub,
 }
 
 impl Settings {

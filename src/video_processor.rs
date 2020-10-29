@@ -5,16 +5,15 @@ use ffmpeg4_ffi::sys;
 use crate::{app, av, pipeline};
 
 pub fn create(app: app::App) -> thread::JoinHandle<()> {
-    let args = app.lock().unwrap().args();
     let settings = app.lock().unwrap().get_settings();
 
     thread::spawn(move || {
         prepare_libav();
 
-        let mut decoder = av::decoder_ctx::DecoderCtx::open(&args);
-        let mut encoder = av::encoder_ctx::EncoderCtx::new(&args, &decoder);
+        let mut decoder = av::decoder_ctx::DecoderCtx::open(&settings);
+        let mut encoder = av::encoder_ctx::EncoderCtx::new(&settings, &decoder);
 
-        let mut pipeline = pipeline::Pipeline::new(&args, &settings, &decoder);
+        let mut pipeline = pipeline::Pipeline::new(&settings, &decoder);
 
         loop {
             // read a new frame from /dev/video0

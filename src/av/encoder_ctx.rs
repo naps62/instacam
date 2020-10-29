@@ -6,7 +6,7 @@ use ffmpeg4_ffi::sys;
 use super::decoder_ctx::DecoderCtx;
 use super::utils;
 
-use crate::args::Args;
+use crate::app::settings::Settings;
 
 pub struct EncoderCtx {
     pub av: *mut sys::AVFormatContext,
@@ -21,9 +21,9 @@ unsafe impl Send for EncoderCtx {}
 const CODEC_ID_RAW: u32 = sys::AVCodecID_AV_CODEC_ID_RAWVIDEO;
 
 impl EncoderCtx {
-    pub fn new(args: &Args, decoder_ctx: &DecoderCtx) -> EncoderCtx {
+    pub fn new(settings: &Settings, decoder_ctx: &DecoderCtx) -> EncoderCtx {
         unsafe {
-            let path = args.output.clone();
+            let path = settings.output.clone();
 
             let path_str = utils::str_to_c_str(path.as_str());
             let format_str = utils::str_to_c_str("v4l2");
