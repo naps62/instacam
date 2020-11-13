@@ -16,7 +16,7 @@ pub struct BgSub {
 
 pub fn new(out: Frame) -> BgSub {
     let out_size = utils::frame_to_mat(out).size().unwrap();
-    let subtractor = video::create_background_subtractor_mog2(500, 16.0, true).unwrap();
+    let subtractor = video::create_background_subtractor_mog2(100, 2.0, false).unwrap();
     let fg_mask = unsafe { Mat::new_size(out_size, CV_8UC3).unwrap() };
 
     BgSub {
