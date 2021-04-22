@@ -1,0 +1,15 @@
+{
+  "input": "/dev/video0",
+  "output": "/dev/video2",
+  "width": 1280,
+  "height": 720,
+  "fps": 30,
+  "pipeline": [
+    {
+      "name": "bgsub2"
+    },
+    {
+      "name": "preview"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 use opencv::core::{Mat, CV_8UC3};
 use opencv::prelude::*;
-use opencv::video::prelude::BackgroundSubtractorMOG2;
+use opencv::video::prelude::BackgroundSubtractorKNN;
 use opencv::{core, video};
 // use opencv::bgsegm;
 
@@ -9,14 +9,14 @@ use super::{utils, Filter};
 use crate::{av, types::Frame};
 
 pub struct BgSub {
-    subtractor: core::Ptr<dyn video::BackgroundSubtractorMOG2>,
+    subtractor: core::Ptr<dyn video::BackgroundSubtractorKNN>,
     fg_mask: Mat,
     out: Frame,
 }
 
 pub fn new(out: Frame) -> BgSub {
     let out_size = utils::frame_to_mat(out).size().unwrap();
-    let subtractor = video::create_background_subtractor_mog2(100, 2.0, false).unwrap();
+    let subtractor = video::create_background_subtractor_knn(500, 400.0, true).unwrap();
     let fg_mask = unsafe { Mat::new_size(out_size, CV_8UC3).unwrap() };
 
     BgSub {
@@ -31,7 +31,7 @@ impl Filter for BgSub {
         let src = utils::frame_to_mat(src_frame);
         let mut dst = utils::frame_to_mat(self.out);
 
-        BackgroundSubtractorMOG2::apply(&mut self.subtractor, &src, &mut self.fg_mask, -1.0)
+        BackgroundSubtractorKNN::apply(&mut self.subtractor, &src, &mut self.fg_mask, -1.0)
             .unwrap();
         // BackgroundSubtractorKNN::apply(&mut self.subtractor, &src, &mut self.fg_mask, -1.0)
         //     .unwrap();

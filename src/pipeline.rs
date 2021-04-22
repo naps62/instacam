@@ -83,6 +83,7 @@ pub fn alloc_filters(settings: &Settings) -> Vec<Box<dyn Filter>> {
                     Sharpen => Box::new(sharpen::new(frame)),
                     Preview => Box::new(preview::new(settings.width, settings.height, frame)),
                     BgSub => Box::new(bgsub::new(frame)),
+                    BgSub2 => Box::new(bgsub2::new(frame)),
                 }
             })
             .collect()

@@ -14,11 +14,19 @@ pub struct Edges {
     out: Frame,
 }
 
-pub fn new(t1: f64, t2: f64, out: Frame) -> Edges {
+const DEFAULT_T1: f64 = 255.0 / 3.0;
+const DEFAULT_T2: f64 = 255.0;
+
+pub fn new(t1: Option<f64>, t2: Option<f64>, out: Frame) -> Edges {
     let out_size = utils::frame_to_mat(out).size().unwrap();
     let edges = unsafe { Mat::new_size(out_size, CV_8UC1).unwrap() };
 
-    Edges { t1, t2, edges, out }
+    Edges {
+        t1: t1.unwrap_or(DEFAULT_T1),
+        t2: t2.unwrap_or(DEFAULT_T2),
+        edges,
+        out,
+    }
 }
 
 impl Filter for Edges {

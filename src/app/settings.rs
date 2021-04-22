@@ -17,10 +17,11 @@ pub enum Proc {
     Blur { k: i32 },
     Pixelate { k: i32 },
     Sepia,
-    Edges { t1: f64, t2: f64 },
+    Edges { t1: Option<f64>, t2: Option<f64> },
     Sharpen,
     Preview,
     BgSub,
+    BgSub2,
 }
 
 impl Settings {
